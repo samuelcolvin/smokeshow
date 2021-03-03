@@ -1,0 +1,27 @@
+{
+  "name": "hightmp",
+  "version": "1.0.0",
+  "description": "Temporary site deployment using cloudflare workers",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack",
+    "dev": "NODE_ENV=development npm run build",
+    "format": "prettier --write 'src/**/*.{ts,js,css,json,md}'",
+    "lint": "eslint --max-warnings=0 src && prettier --check 'src/**/*.{js,ts,tsx,css,scss}'"
+  },
+  "author": "author",
+  "license": "MIT OR Apache-2.0",
+  "dependencies": {
+    "@cloudflare/workers-types": "^2.0.0",
+    "@typescript-eslint/eslint-plugin": "^4.16.1",
+    "@typescript-eslint/parser": "^4.16.1",
+    "eslint": "^7.21.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-config-typescript": "^3.0.0",
+    "prettier": "^2.0.5",
+    "ts-loader": "^7.0.5",
+    "typescript": "^3.9.5",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12"
+  }
+}

@@ -1,0 +1,11 @@
+name = "hightmp"
+type = "webpack"
+account_id = "d6252a570c309c113744c9e11317e271"
+workers_dev = true
+route = ""
+zone_id = ""
+webpack_config = "webpack.config.js"
+
+[vars]
+DEBUG = "TRUE"
+SENTRY_DSN = "https://36d74143efe449b3845e863cabdd2412@o438923.ingest.sentry.io/5525305"
