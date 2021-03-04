@@ -5,7 +5,10 @@ workers_dev = true
 route = ""
 zone_id = ""
 webpack_config = "webpack.config.js"
+kv_namespaces = [
+	 { binding = "HIGH_TMP", preview_id = "0fe96c6c7e6e4d6c8194148931a60453", id = "f966a19796ee425ba126393a83111beb" }
+]
 
 [vars]
 DEBUG = "TRUE"
-SENTRY_DSN = "https://36d74143efe449b3845e863cabdd2412@o438923.ingest.sentry.io/5525305"
+SENTRY_DSN = "https://54654d4d8c1d4d1cac68d931a4ae7d8c@o168119.ingest.sentry.io/5661678"

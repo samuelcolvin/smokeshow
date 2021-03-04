@@ -1,6 +1,6 @@
 import {captureException} from './sentry'
-import {index} from './views'
-import {debug, HttpError} from './utils'
+import {views} from './views'
+import {debug, HttpError, check_method} from './utils'
 
 addEventListener('fetch', e => e.respondWith(handle(e)))
 
@@ -26,8 +26,16 @@ async function handle(event: FetchEvent) {
 async function route(event: FetchEvent) {
   const {request} = event
   const url = new URL(request.url)
-  if (url.pathname === '/') {
-    return await index(request)
+  for (const view of views) {
+    if (typeof view.match == 'string') {
+      if (view.match != url.pathname) {
+        continue
+      }
+    } else if (!view.match(url)) {
+      continue
+    }
+    check_method(request, view.method)
+    return view.view(request, url)
   }
-  throw new HttpError(404, '404: Page not found')
+  throw new HttpError(404, 'Page not found')
 }

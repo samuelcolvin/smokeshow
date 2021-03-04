@@ -47,7 +47,7 @@ interface SentryData {
   }
   message?: string
   level?: string
-  extra: Record<string, any> // eslint-disable-line
+  extra: Record<string, any>
 }
 
 async function _capture(request: Request, data: Partial<SentryData>): Promise<Response> {
