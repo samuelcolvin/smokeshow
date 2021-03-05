@@ -1,6 +1,6 @@
 import {html_response, HttpError, json_response, View} from './utils'
-import {check_create_auth, create_random_hex, check_upload_auth, UploadInfo} from './auth'
-import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH} from './constants'
+import {check_create_auth, create_random_hex, check_upload_auth, sign_auth} from './auth'
+import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL} from './constants'
 
 declare const HIGH_TMP: KVNamespace
 
@@ -12,7 +12,7 @@ async function site_summary(public_key: string): Promise<SiteSummary> {
   const raw = await HIGH_TMP.get(`site:${public_key}:${INFO_FILE_NAME}`, 'json')
   const obj = raw as Record<string, any>
   const files = await HIGH_TMP.list({prefix: `site:${public_key}:`})
-  obj.files = files.keys.map(k => k.name.substr(30)).filter(f => f != INFO_FILE_NAME)
+  obj.files = files.keys.map(k => k.name.substr(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)
   return obj
 }
 
@@ -67,7 +67,7 @@ async function get_file(request: Request, public_key: string, path: string): Pro
 }
 
 async function post_file(request: Request, public_key: string, path: string): Promise<Response> {
-  const site_expiration = await check_upload_auth(public_key, request)
+  const creation_ms = await check_upload_auth(public_key, request)
   if (path == INFO_FILE_NAME) {
     throw new HttpError(403, `Overwriting "${INFO_FILE_NAME}" is forbidden`)
   }
@@ -75,7 +75,7 @@ async function post_file(request: Request, public_key: string, path: string): Pr
   const content_type = request.headers.get('content-type')
   const blob = await request.blob()
   await HIGH_TMP.put(`site:${public_key}:${path}`, blob.stream(), {
-    expiration: site_expiration,
+    expiration: Math.round((creation_ms + SITE_TTL) / 1000),
     metadata: {content_type},
   })
 
@@ -99,42 +99,38 @@ export const views: View[] = [
     view: async (request, info) => {
       await check_create_auth(request)
       const public_key = create_random_hex(PUBLIC_KEY_LENGTH)
-      const secret_key = 'sk_' + create_random_hex(60)
 
       if (await HIGH_TMP.get(`site:${public_key}:${INFO_FILE_NAME}`)) {
         // shouldn't happen
         throw new HttpError(409, 'Site with this public key already exists')
       }
-
       const creation = new Date()
-      const site_expiration_date = new Date(creation.getTime() + 30 * 24 * 3600 * 1000)
-      const upload_expiration_date = new Date(creation.getTime() + 3600 * 1000)
-      const site_expiration = Math.round(site_expiration_date.getTime() / 1000)
+      const creation_ms = creation.getTime()
+      const secret_key = await sign_auth({public_key, creation: creation_ms})
 
-      const upload_info: UploadInfo = {site_expiration, secret_key}
-      await HIGH_TMP.put(`site:${public_key}|upload`, JSON.stringify(upload_info), {
-        expiration: upload_expiration_date.getTime() / 1000,
-      })
+      const site_expiration_date = new Date(creation_ms + SITE_TTL)
+      const upload_expiration_date = new Date(creation_ms + UPLOAD_TTL)
+
       const site_info = {
         public_key,
         url: `https://${info.url.hostname}/${public_key}/`,
         site_creation: creation.toISOString(),
         site_expiration: site_expiration_date.toISOString(),
-        upload_expiration: upload_expiration_date.toISOString(),
       }
       await HIGH_TMP.put(`site:${public_key}:${INFO_FILE_NAME}`, JSON.stringify(site_info, null, 2), {
-        expiration: site_expiration,
+        expiration: Math.round(site_expiration_date.getTime() / 1000),
       })
 
       return json_response({
         message: 'New site created successfully',
         secret_key,
+        upload_expiration: upload_expiration_date.toISOString(),
         ...site_info,
       })
     },
   },
   {
-    match: new RegExp(`^\\/([a-f0-9]{${PUBLIC_KEY_LENGTH})(\\/.*)`),
+    match: new RegExp(`^\\/([a-f0-9]{${PUBLIC_KEY_LENGTH}})(\\/.*)`),
     allow: ['GET', 'POST'],
     view: async (request, info) => {
       const [, public_key, path] = info.match as RegExpMatchArray
