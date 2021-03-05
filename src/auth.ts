@@ -19,8 +19,8 @@ export async function check_create_auth(request: Request): Promise<void> {
 }
 
 export interface UploadInfo {
-  site_expiration: number,
-  secret_key: string,
+  site_expiration: number
+  secret_key: string
 }
 
 export async function check_upload_auth(public_key: string, request: Request): Promise<number> {

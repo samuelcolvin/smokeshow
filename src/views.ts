@@ -4,7 +4,6 @@ import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH} from './constants'
 
 declare const HIGH_TMP: KVNamespace
 
-
 interface SiteSummary {
   files?: string[]
 }
@@ -17,7 +16,7 @@ async function site_summary(public_key: string): Promise<SiteSummary> {
   return obj
 }
 
-function* get_index_options (public_key: string, path: string) {
+function* get_index_options(public_key: string, path: string) {
   yield `site:${public_key}:${path}index.html`
   yield `site:${public_key}:${path.slice(0, -1)}.html`
   yield `site:${public_key}:${path}index.json`
@@ -40,7 +39,7 @@ async function get_file(request: Request, public_key: string, path: string): Pro
     if (!v.value && path == '/') {
       return json_response({
         message: `The site (${public_key} has no index file, hence this summary response`,
-        summary: await site_summary(public_key)
+        summary: await site_summary(public_key),
       })
     }
   }
@@ -77,7 +76,7 @@ async function post_file(request: Request, public_key: string, path: string): Pr
   const blob = await request.blob()
   await HIGH_TMP.put(`site:${public_key}:${path}`, blob.stream(), {
     expiration: site_expiration,
-    metadata: {content_type}
+    metadata: {content_type},
   })
 
   return json_response({path, content_type})
@@ -130,7 +129,7 @@ export const views: View[] = [
       return json_response({
         message: 'New site created successfully',
         secret_key,
-        ...site_info
+        ...site_info,
       })
     },
   },
@@ -145,6 +144,6 @@ export const views: View[] = [
         // method == 'POST'
         return await post_file(request, public_key, path)
       }
-    }
+    },
   },
 ]

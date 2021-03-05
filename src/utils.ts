@@ -48,7 +48,7 @@ export interface RequestExtraInfo {
 
 export interface View {
   match: RegExp | string
-  allow: Method | Method[],
+  allow: Method | Method[]
   view: {
     (request: Request, info: RequestExtraInfo): Promise<Response>
   }
