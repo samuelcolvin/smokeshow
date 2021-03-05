@@ -1,5 +1,5 @@
 import {HttpError} from './utils'
-import {INFO_FILE_NAME, AUTH_HASH_THRESHOLD, UPLOAD_TTL} from './constants'
+import {AUTH_HASH_THRESHOLD, UPLOAD_TTL} from './constants'
 
 declare const HIGH_TMP: KVNamespace
 
@@ -70,7 +70,6 @@ async function get_hmac_secret_key(): Promise<CryptoKey> {
     return secret_key
   }
 }
-
 
 export async function sign_auth(upload_auth: UploadAuth): Promise<string> {
   const data = new TextEncoder().encode(JSON.stringify(upload_auth))
