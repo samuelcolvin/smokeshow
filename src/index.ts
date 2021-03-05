@@ -1,6 +1,6 @@
 import {captureException} from './sentry'
 import {views} from './views'
-import {debug, HttpError, check_method, Method} from './utils'
+import {debug, HttpError, check_method} from './utils'
 
 addEventListener('fetch', e => e.respondWith(handle(e)))
 
@@ -42,16 +42,7 @@ async function route(event: FetchEvent) {
       continue
     }
 
-    const allow_methods = typeof view.allow == 'string' ? [view.allow] : view.allow
-    if (!allow_methods.includes(request.method as Method)) {
-      if (view.skip_405) {
-        continue
-      } else {
-        const allow = allow_methods.join(',')
-        const msg = `Method Not Allowed (allowed: ${allow})`
-        throw new HttpError(405, msg, {allow})
-      }
-    }
+    check_method(request, view.allow)
 
     return view.view(request, {url, match, computed_path})
   }

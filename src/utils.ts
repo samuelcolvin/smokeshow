@@ -40,17 +40,16 @@ export function check_method(request: Request, allow: Method | Method[]): void {
   }
 }
 
-export interface View {
-  match: RegExp | string
-  allow: Method | Method[]
-  skip_405?: boolean
-  view: {
-    (request: Request, info: RequestInfo): Promise<Response>
-  }
-}
-
-export interface RequestInfo {
+export interface RequestExtraInfo {
   url: URL
   match: RegExpMatchArray | boolean
   computed_path: string
+}
+
+export interface View {
+  match: RegExp | string
+  allow: Method | Method[],
+  view: {
+    (request: Request, info: RequestExtraInfo): Promise<Response>
+  }
 }

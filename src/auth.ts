@@ -1,7 +1,7 @@
 import {HttpError} from './utils'
+import {INFO_FILE_NAME, AUTH_HASH_THRESHOLD} from './constants'
 
 declare const HIGH_TMP: KVNamespace
-const auth_threshold = 2 ** 233
 
 export async function check_create_auth(request: Request): Promise<void> {
   let authorisation = request.headers.get('authorisation')
@@ -13,7 +13,7 @@ export async function check_create_auth(request: Request): Promise<void> {
   const hash = await crypto.subtle.digest('sha-256', array_key)
   const hash_int = new Uint8Array(hash).reduce((a, v) => a * 256 + v, 0)
 
-  if (hash_int > auth_threshold) {
+  if (hash_int > AUTH_HASH_THRESHOLD) {
     throw new HttpError(403, 'Invalid Authorisation header, you need to generate a key with a valid hash')
   }
 }
@@ -32,7 +32,7 @@ export async function check_upload_auth(public_key: string, request: Request): P
 
   const upload_info: UploadInfo | null = await HIGH_TMP.get(`site:${public_key}|upload`, 'json')
   if (!upload_info) {
-    if (await HIGH_TMP.get(`site:${public_key}:site.json`)) {
+    if (await HIGH_TMP.get(`site:${public_key}:${INFO_FILE_NAME}`)) {
       // site exists, but upload is not longer allowed
       throw new HttpError(410, 'Too late, site exists but upload is no longer allowed')
     } else {
