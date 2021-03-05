@@ -18,7 +18,7 @@ export class HttpError extends Error {
   headers: Record<string, string>
 
   constructor(status: number, body: string, headers: Record<string, string> | undefined = undefined) {
-    super(`HTTP Error ${status}: ${body}`)
+    super(`HTTP Error ${status}: ${body}, headers=${JSON.stringify(headers || {})}`)
     this.status = status
     this.body = body
     this.headers = headers || {}
@@ -41,13 +41,16 @@ export function check_method(request: Request, allow: Method | Method[]): void {
 }
 
 export interface View {
-  match:
-    | {
-        (url: URL): boolean
-      }
-    | string
-  method: Method | Method[]
+  match: RegExp | string
+  allow: Method | Method[]
+  skip_405?: boolean
   view: {
-    (request: Request, url: URL): Promise<Response>
+    (request: Request, info: RequestInfo): Promise<Response>
   }
+}
+
+export interface RequestInfo {
+  url: URL
+  match: RegExpMatchArray | boolean
+  computed_path: string
 }
