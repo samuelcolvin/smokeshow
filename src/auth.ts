@@ -51,11 +51,11 @@ export async function sign_auth(upload_auth: UploadAuth): Promise<string> {
   return 'sk_' + array_to_base64(signed)
 }
 
-export function create_random_hex(length: number): string {
+export function create_random_string(length: number): string {
   const raw = new Uint8Array(Math.ceil(length / 2))
   crypto.getRandomValues(raw)
   return Array.from(raw)
-    .map(v => ('0' + v.toString(16)).slice(-2))
+    .map(v => ('0' + v.toString(36)).slice(-2))
     .join('')
     .substr(0, length)
 }

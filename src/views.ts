@@ -1,5 +1,5 @@
 import {html_response, HttpError, json_response, View} from './utils'
-import {check_create_auth, create_random_hex, check_upload_auth, sign_auth} from './auth'
+import {check_create_auth, create_random_string, check_upload_auth, sign_auth} from './auth'
 import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL} from './constants'
 
 declare const HIGH_TMP: KVNamespace
@@ -98,7 +98,7 @@ export const views: View[] = [
     allow: 'POST',
     view: async (request, info) => {
       await check_create_auth(request)
-      const public_key = create_random_hex(PUBLIC_KEY_LENGTH)
+      const public_key = create_random_string(PUBLIC_KEY_LENGTH)
 
       if (await HIGH_TMP.get(`site:${public_key}:${INFO_FILE_NAME}`)) {
         // shouldn't happen
