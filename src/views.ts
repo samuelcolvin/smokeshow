@@ -59,10 +59,8 @@ async function get_file(request: Request, public_key: string, path: string): Pro
   }
 
   const headers: Record<string, string> = {}
-  const metadata: {content_type: string | null} | null = v.metadata as any
-  if (metadata && metadata.content_type) {
-    headers['content-type'] = metadata.content_type
-  }
+  const metadata: {content_type?: string} = (v.metadata as any) || {}
+  headers['content-type'] = metadata.content_type || 'application/octet-stream'
   return new Response(v.value, {status, headers})
 }
 

@@ -2,6 +2,7 @@
 
 import asyncio
 import os
+import re
 import sys
 from mimetypes import guess_type
 from pathlib import Path
@@ -12,6 +13,13 @@ from httpx import AsyncClient
 
 create_url = 'https://hightmp.samuelcolvin.workers.dev/create/'
 auth_header = os.environ['HIGHTMP_AUTH']
+
+
+def get_content_type(url: str) -> Optional[str]:
+    if re.search(r'\.(js|css)\.map$', url):
+        return 'application/json'
+    else:
+        return guess_type(url)[0]
 
 
 async def main(path: str) -> Optional[str]:
@@ -31,7 +39,7 @@ async def main(path: str) -> Optional[str]:
         async def upload_file(file_path: Path):
             url_path = str(file_path.relative_to(root_path))
             headers = {'Authorisation': secret_key}
-            ct = guess_type(url_path)[0]
+            ct = get_content_type(url_path)
             if ct:
                 headers['Content-Type'] = ct
             r2 = await client.post(upload_root + url_path, data=file_path.read_bytes(), headers=headers)
