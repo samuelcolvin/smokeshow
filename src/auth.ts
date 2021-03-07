@@ -4,12 +4,9 @@ import {AUTH_HASH_THRESHOLD, UPLOAD_TTL} from './constants'
 declare const HIGH_TMP: KVNamespace
 
 export async function check_create_auth(request: Request): Promise<void> {
-  let authorisation = request.headers.get('authorisation')
-  if (!authorisation) {
-    throw new HttpError(401, 'Authorisation header required', {'www-authenticate': 'Basic'})
-  }
-  authorisation = authorisation.replace(/^bearer /i, '')
-  const array_key = Uint8Array.from(atob(authorisation), c => c.charCodeAt(0))
+  const authorisation = get_auth_header(request)
+
+  const array_key = base64_to_array(authorisation)
   const hash = await crypto.subtle.digest('sha-256', array_key)
   const hash_int = new Uint8Array(hash).reduce((a, v) => a * 256 + v, 0)
 
@@ -24,13 +21,9 @@ export interface UploadAuth {
 }
 
 export async function check_upload_auth(public_key: string, request: Request): Promise<number> {
-  const authorisation = request.headers.get('authorisation')
-  if (!authorisation) {
-    throw new HttpError(401, 'Authorisation header required', {'www-authenticate': 'Basic'})
-  }
-  // replace gets rid of optional "Bearer " prefix
-  const upload_auth = await decode_signed_object(authorisation.replace(/^bearer /i, ''))
-  console.log('upload_auth:', upload_auth)
+  const authorisation = get_auth_header(request)
+
+  const upload_auth = await decode_signed_object(authorisation)
 
   if (upload_auth.public_key != public_key) {
     throw new HttpError(400, "Authorisation secret doesn't match public key from upload URL")
@@ -41,18 +34,39 @@ export async function check_upload_auth(public_key: string, request: Request): P
   return upload_auth.creation
 }
 
-const array2hex = (raw: Uint8Array): string =>
-  Array.from(raw)
-    .map(v => ('0' + v.toString(16)).slice(-2))
-    .join('')
+export async function sign_auth(upload_auth: UploadAuth): Promise<string> {
+  const data = new TextEncoder().encode(JSON.stringify(upload_auth))
 
-const hex2array = (hex: string): Uint8Array =>
-  new Uint8Array((hex.match(/.{1,2}/g) as string[]).map(b => parseInt(b, 16)))
+  const secret_key = await get_hmac_secret_key()
+  const signature = new Uint8Array(await crypto.subtle.sign('HMAC', secret_key, data))
+
+  // length has to be hard coded as it's used in
+  if (signature.length != 64) {
+    console.error('signature:', signature)
+    throw Error(`raw HMAC signature should have length 64, not ${signature.length}`)
+  }
+  const signed = new Uint8Array(64 + data.length)
+  signed.set(signature)
+  signed.set(data, 64)
+  return 'sk_' + array_to_base64(signed)
+}
 
 export function create_random_hex(length: number): string {
   const raw = new Uint8Array(Math.ceil(length / 2))
   crypto.getRandomValues(raw)
-  return array2hex(raw).substr(0, length)
+  return Array.from(raw)
+    .map(v => ('0' + v.toString(16)).slice(-2))
+    .join('')
+    .substr(0, length)
+}
+
+export function get_auth_header(request: Request): string {
+  const authorisation = request.headers.get('authorisation')
+  if (!authorisation) {
+    throw new HttpError(401, 'Authorisation header required', {'www-authenticate': 'Basic'})
+  }
+  // replace gets rid of optional "Bearer " prefix
+  return authorisation.replace(/^bearer /i, '')
 }
 
 const hmac_algo: HmacImportParams = {name: 'HMAC', hash: {name: 'SHA-512'}}
@@ -70,27 +84,9 @@ async function get_hmac_secret_key(): Promise<CryptoKey> {
     return secret_key
   }
 }
-
-export async function sign_auth(upload_auth: UploadAuth): Promise<string> {
-  const data = new TextEncoder().encode(JSON.stringify(upload_auth))
-
-  const secret_key = await get_hmac_secret_key()
-  const signature = new Uint8Array(await crypto.subtle.sign('HMAC', secret_key, data))
-
-  // length has to be hard coded as it's used in
-  if (signature.length != 64) {
-    console.error('signature:', signature)
-    throw Error(`raw HMAC signature should have length 64, not ${signature.length}`)
-  }
-  const signed = new Uint8Array(64 + data.length)
-  signed.set(signature)
-  signed.set(data, 64)
-  return 'sk_' + array2hex(signed)
-}
-
 async function decode_signed_object(signed: string): Promise<UploadAuth> {
   // substr gets rid of 'sk_' prefix
-  const raw_signed = hex2array(signed.substr(3))
+  const raw_signed = base64_to_array(signed.substr(3))
   const signature = raw_signed.subarray(0, 64)
   const data = raw_signed.subarray(64)
 
@@ -105,3 +101,12 @@ async function decode_signed_object(signed: string): Promise<UploadAuth> {
   const obj = new TextDecoder().decode(data)
   return JSON.parse(obj)
 }
+
+const base64_to_array = (b64: string): Uint8Array => {
+  try {
+    return Uint8Array.from(atob(b64), c => c.charCodeAt(0))
+  } catch (err) {
+    throw new HttpError(403, 'Invalid Authorisation header')
+  }
+}
+const array_to_base64 = (array: Uint8Array): string => btoa(String.fromCharCode.apply(null, array as any))
