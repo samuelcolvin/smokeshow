@@ -2,3 +2,5 @@
 node_modules/
 worker
 /.idea/
+/env/
+/site/

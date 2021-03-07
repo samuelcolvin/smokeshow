@@ -1,5 +1,5 @@
 import {captureException} from './sentry'
-import {views} from './views'
+import {views, smart_referrer_redirect} from './views'
 import {debug, HttpError, check_method} from './utils'
 
 addEventListener('fetch', e => e.respondWith(handle(e)))
@@ -29,6 +29,13 @@ async function route(event: FetchEvent) {
   let computed_path = url.pathname
   if (!computed_path.includes('.') && !computed_path.endsWith('/')) {
     computed_path += '/'
+  }
+
+  if (request.method == 'GET') {
+    const redirect_url = smart_referrer_redirect(request, url)
+    if (redirect_url) {
+      return Response.redirect(redirect_url, 307)
+    }
   }
 
   for (const view of views) {

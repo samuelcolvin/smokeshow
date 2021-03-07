@@ -4,10 +4,9 @@ import {AUTH_HASH_THRESHOLD, UPLOAD_TTL} from './constants'
 declare const HIGH_TMP: KVNamespace
 
 export async function check_create_auth(request: Request): Promise<void> {
-  const authorisation = get_auth_header(request)
+  const auth_key = get_auth_header(request)
 
-  const array_key = base64_to_array(authorisation)
-  const hash = await crypto.subtle.digest('sha-256', array_key)
+  const hash = await crypto.subtle.digest('sha-256', auth_key)
   const hash_int = new Uint8Array(hash).reduce((a, v) => a * 256 + v, 0)
 
   if (hash_int > AUTH_HASH_THRESHOLD) {
@@ -21,9 +20,9 @@ export interface UploadAuth {
 }
 
 export async function check_upload_auth(public_key: string, request: Request): Promise<number> {
-  const authorisation = get_auth_header(request)
+  const auth_key = get_auth_header(request)
 
-  const upload_auth = await decode_signed_object(authorisation)
+  const upload_auth = await decode_signed_object(auth_key)
 
   if (upload_auth.public_key != public_key) {
     throw new HttpError(400, "Authorisation secret doesn't match public key from upload URL")
@@ -48,7 +47,7 @@ export async function sign_auth(upload_auth: UploadAuth): Promise<string> {
   const signed = new Uint8Array(64 + data.length)
   signed.set(signature)
   signed.set(data, 64)
-  return 'sk_' + array_to_base64(signed)
+  return array_to_base64(signed)
 }
 
 export function create_random_string(length: number): string {
@@ -60,13 +59,18 @@ export function create_random_string(length: number): string {
     .substr(0, length)
 }
 
-export function get_auth_header(request: Request): string {
+export function get_auth_header(request: Request): Uint8Array {
   const authorisation = request.headers.get('authorisation')
   if (!authorisation) {
     throw new HttpError(401, 'Authorisation header required', {'www-authenticate': 'Basic'})
   }
   // replace gets rid of optional "Bearer " prefix
-  return authorisation.replace(/^bearer /i, '')
+  const b64 = authorisation.replace(/^bearer /i, '')
+  try {
+    return Uint8Array.from(atob(b64), c => c.charCodeAt(0))
+  } catch (err) {
+    throw new HttpError(403, 'Invalid Authorisation header, not correctly Base64 encoded')
+  }
 }
 
 const hmac_algo: HmacImportParams = {name: 'HMAC', hash: {name: 'SHA-512'}}
@@ -84,9 +88,7 @@ async function get_hmac_secret_key(): Promise<CryptoKey> {
     return secret_key
   }
 }
-async function decode_signed_object(signed: string): Promise<UploadAuth> {
-  // substr gets rid of 'sk_' prefix
-  const raw_signed = base64_to_array(signed.substr(3))
+async function decode_signed_object(raw_signed: Uint8Array): Promise<UploadAuth> {
   const signature = raw_signed.subarray(0, 64)
   const data = raw_signed.subarray(64)
 
@@ -102,11 +104,4 @@ async function decode_signed_object(signed: string): Promise<UploadAuth> {
   return JSON.parse(obj)
 }
 
-const base64_to_array = (b64: string): Uint8Array => {
-  try {
-    return Uint8Array.from(atob(b64), c => c.charCodeAt(0))
-  } catch (err) {
-    throw new HttpError(403, 'Invalid Authorisation header')
-  }
-}
 const array_to_base64 = (array: Uint8Array): string => btoa(String.fromCharCode.apply(null, array as any))

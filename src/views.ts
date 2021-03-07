@@ -82,6 +82,8 @@ async function post_file(request: Request, public_key: string, path: string): Pr
   return json_response({path, content_type})
 }
 
+const site_path_regex = new RegExp(`^\\/([a-z0-9]{${PUBLIC_KEY_LENGTH}})(\\/.*)`)
+
 export const views: View[] = [
   {
     match: '/',
@@ -113,7 +115,7 @@ export const views: View[] = [
 
       const site_info = {
         public_key,
-        url: `https://${info.url.hostname}/${public_key}/`,
+        url: `${info.url.origin}/${public_key}/`,
         site_creation: creation.toISOString(),
         site_expiration: site_expiration_date.toISOString(),
       }
@@ -130,7 +132,7 @@ export const views: View[] = [
     },
   },
   {
-    match: new RegExp(`^\\/([a-f0-9]{${PUBLIC_KEY_LENGTH}})(\\/.*)`),
+    match: site_path_regex,
     allow: ['GET', 'POST'],
     view: async (request, info) => {
       const [, public_key, path] = info.match as RegExpMatchArray
@@ -143,3 +145,27 @@ export const views: View[] = [
     },
   },
 ]
+
+export function smart_referrer_redirect(request: Request, url: URL): string | undefined {
+  // magic to redirect requests where a site had a link to a resource assuming it was deploy on route
+  // eg. a request to /favicon.ico with a referrer .../<site pk>/... will be redirected to .../<site pk>/favicon.ico
+
+  if (url.pathname.match(site_path_regex)) {
+    // request is already to a site
+    return
+  }
+  const referrer = request.headers.get('referer')
+  if (!referrer) {
+    // no referer header
+    return
+  }
+  const referrer_url = new URL(referrer)
+  if (referrer_url.origin != url.origin) {
+    // referrer is not hightmp
+    return
+  }
+  const match = referrer_url.pathname.match(site_path_regex)
+  if (match) {
+    return `${url.origin}/${match[1]}${url.pathname}`
+  }
+}
