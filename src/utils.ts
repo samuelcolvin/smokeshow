@@ -4,8 +4,8 @@ export const debug = typeof DEBUG !== 'undefined' && DEBUG === 'TRUE'
 
 export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'OPTIONS'
 
-export function html_response(html: string): Response {
-  return new Response(html, {headers: {'content-type': 'text/html'}})
+export function text_response(body: string, content_type = 'text/plain'): Response {
+  return new Response(body, {headers: {'content-type': content_type}})
 }
 
 export function json_response(obj: Record<string, any>): Response {

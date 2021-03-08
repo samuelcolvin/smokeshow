@@ -1,6 +1,7 @@
-import {clean_path, html_response, HttpError, json_response, View} from './utils'
+import {clean_path, text_response, HttpError, json_response, View} from './utils'
 import {check_create_auth, create_random_string, check_upload_auth, sign_auth} from './auth'
 import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL} from './constants'
+import styles from './styles/main.scss'
 
 declare const HIGH_TMP: KVNamespace
 
@@ -87,11 +88,16 @@ export const views: View[] = [
     match: '/',
     allow: 'GET',
     view: async () =>
-      html_response(`
+      text_response(`
 <h1>Index</h1>
 
 <p>This is the index page, it doesn't say much interesting yet</p>
-`),
+`, 'text/html'),
+  },
+  {
+    match: '/styles.css',
+    allow: 'GET',
+    view: async () => text_response(styles, 'text/css')
   },
   {
     match: '/create/',
