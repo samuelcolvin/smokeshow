@@ -1,7 +1,9 @@
 import {clean_path, text_response, HttpError, json_response, View} from './utils'
 import {check_create_auth, create_random_string, check_upload_auth, sign_auth} from './auth'
 import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL} from './constants'
-import styles from './styles/main.scss'
+import styles from './index/main.scss'
+import github_svg from '!raw-loader!./index/github.svg'
+import index_html from '!raw-loader!./index/index.html'
 
 declare const HIGH_TMP: KVNamespace
 
@@ -86,18 +88,15 @@ const site_path_regex = new RegExp(`^\\/([a-z0-9]{${PUBLIC_KEY_LENGTH}})(\\/.*)`
 export const views: View[] = [
   {
     match: '/',
-    allow: 'GET',
-    view: async () =>
-      text_response(`
-<h1>Index</h1>
-
-<p>This is the index page, it doesn't say much interesting yet</p>
-`, 'text/html'),
+    view: async () => text_response(index_html, 'text/html'),
   },
   {
     match: '/styles.css',
-    allow: 'GET',
-    view: async () => text_response(styles, 'text/css')
+    view: async () => text_response(styles, 'text/css'),
+  },
+  {
+    match: '/github.svg',
+    view: async () => text_response(github_svg, 'image/svg+xml'),
   },
   {
     match: '/create/',

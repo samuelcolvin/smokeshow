@@ -46,7 +46,7 @@ async function route(event: FetchEvent) {
       continue
     }
 
-    check_method(request, view.allow)
+    check_method(request, view.allow || 'GET')
 
     return view.view(request, {url, match, cleaned_path})
   }

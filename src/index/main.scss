@@ -1,0 +1,50 @@
+//$background: #1E1F2E;
+$background: #0d1117;
+$text: #c9d1d9;
+$border-color: #30363d;
+//$link-color: #d87777;
+$link-color: #a09393;
+
+body {
+  background: $background;
+  color: $text;
+  font-family: Menlo, "Meslo LG", monospace;
+  display: flex;
+  justify-content: center;
+  margin: 30px 10px 40px;
+}
+
+main {
+  border: 1px solid $border-color;
+  border-radius: 6px;
+  width: 902px;
+  max-width: calc(100vw - 20px);
+  padding: 20px 15px 20px;
+}
+
+header {
+  display: flex;
+  justify-content: flex-end;
+
+  a {
+    display: flex;
+  }
+  .logo {
+    width: 20px;
+    margin: 0 8px;
+  }
+  .link-text {
+    padding: 5px 0;
+  }
+}
+
+a {
+  color: $link-color;
+  text-decoration: none;
+}
+
+h1 {
+  border-bottom: 1px solid $border-color;
+  font-weight: 500;
+  padding-bottom: 0.5rem;
+}
