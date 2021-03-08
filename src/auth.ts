@@ -34,7 +34,7 @@ export async function check_upload_auth(public_key: string, request: Request): P
 }
 
 export async function sign_auth(upload_auth: UploadAuth): Promise<string> {
-  const data = new TextEncoder().encode(JSON.stringify(upload_auth))
+  const data = new TextEncoder().encode(JSON.stringify([upload_auth.public_key, upload_auth.creation]))
 
   const secret_key = await get_hmac_secret_key()
   const signature = new Uint8Array(await crypto.subtle.sign('HMAC', secret_key, data))
@@ -101,7 +101,8 @@ async function decode_signed_object(raw_signed: Uint8Array): Promise<UploadAuth>
     )
   }
   const obj = new TextDecoder().decode(data)
-  return JSON.parse(obj)
+  const [public_key, creation] = JSON.parse(obj)
+  return {public_key, creation}
 }
 
 const array_to_base64 = (array: Uint8Array): string => btoa(String.fromCharCode.apply(null, array as any))
