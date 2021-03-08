@@ -43,7 +43,7 @@ export function check_method(request: Request, allow: Method | Method[]): void {
 export interface RequestExtraInfo {
   url: URL
   match: RegExpMatchArray | boolean
-  computed_path: string
+  cleaned_path: string
 }
 
 export interface View {
@@ -52,4 +52,12 @@ export interface View {
   view: {
     (request: Request, info: RequestExtraInfo): Promise<Response>
   }
+}
+
+export function clean_path(url: URL): string {
+  let path = url.pathname
+  if (!path.includes('.') && !path.endsWith('/')) {
+    path += '/'
+  }
+  return path
 }

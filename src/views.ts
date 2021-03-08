@@ -1,4 +1,4 @@
-import {html_response, HttpError, json_response, View} from './utils'
+import {clean_path, html_response, HttpError, json_response, View} from './utils'
 import {check_create_auth, create_random_string, check_upload_auth, sign_auth} from './auth'
 import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL} from './constants'
 
@@ -112,7 +112,6 @@ export const views: View[] = [
       const upload_expiration_date = new Date(creation_ms + UPLOAD_TTL)
 
       const site_info = {
-        public_key,
         url: `${info.url.origin}/${public_key}/`,
         site_creation: creation.toISOString(),
         site_expiration: site_expiration_date.toISOString(),
@@ -162,7 +161,7 @@ export function smart_referrer_redirect(request: Request, url: URL): string | un
     // referrer is not hightmp
     return
   }
-  const match = referrer_url.pathname.match(site_path_regex)
+  const match = clean_path(referrer_url).match(site_path_regex)
   if (match) {
     return `${url.origin}/${match[1]}${url.pathname}`
   }
