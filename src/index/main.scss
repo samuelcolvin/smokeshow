@@ -1,21 +1,60 @@
-//$background: #1E1F2E;
-$background: #0d1117;
-$text: #c9d1d9;
-$border-color: #30363d;
-//$link-color: #d87777;
-$link-color: #a09393;
+$light-colors: (
+  "background": #fff,
+  "text": #24292e,
+  "border-color": #e1e4e8,
+  "link-color": #0366d6,
+);
+
+$dark-colors: (
+  "background": #0d1117,
+  "text": #c9d1d9,
+  "border-color": #30363d,
+  "link-color": #58a6ff,
+);
+
+$font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+
 
 body {
-  background: $background;
-  color: $text;
-  font-family: Menlo, "Meslo LG", monospace;
+  @each $name, $color in $light-colors {
+    --#{$name}: #{$color};
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    @each $name, $color in $dark-colors {
+      --#{$name}: #{$color};
+    }
+  }
+}
+
+@font-face {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 500;
+  src: local("Inter"), local("Inter-Regular"), url("/fonts/Inter-Regular.woff") format("woff");
+  font-display: swap;
+}
+@font-face {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 700;
+  src: local("Inter Bold"), local("Inter-Bold"), url("/fonts/Inter-Bold.woff") format("woff");
+  font-display: swap;
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+  font-family: $font-family;
   display: flex;
   justify-content: center;
   margin: 30px 10px 40px;
 }
 
 main {
-  border: 1px solid $border-color;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   width: 902px;
   max-width: calc(100vw - 20px);
@@ -32,6 +71,7 @@ header {
   .logo {
     width: 20px;
     margin: 0 8px;
+    fill: var(--text);
   }
   .link-text {
     padding: 5px 0;
@@ -39,12 +79,12 @@ header {
 }
 
 a {
-  color: $link-color;
+  color: var(--link-color);
   text-decoration: none;
 }
 
 h1 {
-  border-bottom: 1px solid $border-color;
+  border-bottom: 1px solid var(--border-color);
   font-weight: 500;
   padding-bottom: 0.5rem;
 }
