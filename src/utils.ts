@@ -31,8 +31,8 @@ export async function cached_proxy(url: string, content_type: string): Promise<R
 }
 
 interface CacheValue {
-  value: ReadableStream | null,
-  metadata: unknown,
+  value: ReadableStream | null
+  metadata: unknown
 }
 
 export function response_from_cache(cache_value: CacheValue, status = 200): Response {
