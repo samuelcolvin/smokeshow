@@ -10,16 +10,18 @@
     <meta name="msapplication-TileColor" content="#1E1F2E" />
     <meta name="theme-color" content="#1E1F2E" />
 
-    <link rel="stylesheet" href="/styles.css" crossorigin="anonymous">
     <link rel="preload" href="/fonts/Inter-Regular.woff" as="font" type="font/woff" crossorigin="anonymous"/>
+    <link rel="preload" href="/fonts/Inter-Medium.woff" as="font" type="font/woff" crossorigin="anonymous"/>
     <link rel="preload" href="/fonts/Inter-Bold.woff" as="font" type="font/woff" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="/styles.css" crossorigin="anonymous">
   </head>
   <body>
     <main>
       <header>
+        <div class="weight-medium">README.md</div>
         <a href="https://github.com/samuelcolvin/hightmp">
           {github_svg}
-          <span class="link-text">samuelcolvin/hightmp</span>
+          <span>samuelcolvin/hightmp</span>
         </a>
       </header>
       {readme}

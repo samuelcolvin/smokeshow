@@ -2,7 +2,7 @@ import {clean_path, simple_response, cached_proxy, response_from_cache, HttpErro
 import {check_create_auth, create_random_string, check_upload_auth, sign_auth} from './auth'
 import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL} from './constants'
 import styles from './index/main.scss'
-import readme from './index/README.md'
+import readme from '../README.md'
 import github_svg from '!raw-loader!./index/github.svg'
 import index_html from '!raw-loader!./index/index.html'
 

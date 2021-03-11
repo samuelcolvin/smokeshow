@@ -1,19 +1,4 @@
-$light-colors: (
-  "background": #fff,
-  "text": #24292e,
-  "border-color": #e1e4e8,
-  "link-color": #0366d6,
-);
-
-$dark-colors: (
-  "background": #0d1117,
-  "text": #c9d1d9,
-  "border-color": #30363d,
-  "link-color": #58a6ff,
-);
-
-$font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-
+@import 'variables';
 
 body {
   @each $name, $color in $light-colors {
@@ -29,20 +14,7 @@ body {
   }
 }
 
-@font-face {
-  font-family: Inter;
-  font-style: normal;
-  font-weight: 500;
-  src: local("Inter"), local("Inter-Regular"), url("/fonts/Inter-Regular.woff") format("woff");
-  font-display: swap;
-}
-@font-face {
-  font-family: Inter;
-  font-style: normal;
-  font-weight: 700;
-  src: local("Inter Bold"), local("Inter-Bold"), url("/fonts/Inter-Bold.woff") format("woff");
-  font-display: swap;
-}
+@import 'highlight';
 
 body {
   background: var(--background);
@@ -50,7 +22,8 @@ body {
   font-family: $font-family;
   display: flex;
   justify-content: center;
-  margin: 30px 10px 40px;
+  margin: 40px 10px 60px;
+  font-size: 16px;
 }
 
 main {
@@ -63,7 +36,7 @@ main {
 
 header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
 
   a {
     display: flex;
@@ -72,9 +45,6 @@ header {
     width: 20px;
     margin: 0 8px;
     fill: var(--text);
-  }
-  .link-text {
-    padding: 5px 0;
   }
 }
 
@@ -85,6 +55,29 @@ a {
 
 h1 {
   border-bottom: 1px solid var(--border-color);
-  font-weight: 500;
   padding-bottom: 0.5rem;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+}
+
+.weight-medium {
+  font-weight: 600;
+}
+
+p, ul {
+  line-height: 1.5;
+  code {
+    font-family: $font-family-monospace;
+    padding: .2em .4em;
+    margin: 0;
+    font-size: 85%;
+    background-color: var(--code-background);
+    border-radius: 6px;
+  }
+}
+
+li+li {
+    margin-top: .25em;
 }

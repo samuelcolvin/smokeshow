@@ -1,4 +1,5 @@
 const path = require('path')
+const hljs = require('highlight.js')
 
 module.exports = {
   output: {
@@ -40,7 +41,10 @@ module.exports = {
           {
             loader: 'markdown-loader',
             options: {
-              // your options here
+              highlight: function(code, language) {
+                const validLanguage = hljs.getLanguage(language) ? language : 'plaintext'
+                return hljs.highlight(validLanguage, code).value
+              }
             }
           }
         ]
