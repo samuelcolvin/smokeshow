@@ -11,7 +11,8 @@ from typing import Optional
 from httpx import AsyncClient
 
 
-create_url = 'https://hightmp.samuelcolvin.workers.dev/create/'
+# create_url = 'https://hightmp.samuelcolvin.workers.dev/create/'
+create_url = 'http://localhost:8787/create/'
 auth_header = os.environ['HIGHTMP_AUTH']
 
 
@@ -34,6 +35,7 @@ async def main(path: str) -> Optional[str]:
         obj = r.json()
         upload_root = obj['url']
         assert upload_root.endswith('/'), upload_root
+        upload_root = upload_root.replace('https://hightmp.samuelcolvin.workers.dev', 'http://localhost:8787')
         secret_key = obj['secret_key']
 
         async def upload_file(file_path: Path):
@@ -43,8 +45,12 @@ async def main(path: str) -> Optional[str]:
             if ct:
                 headers['Content-Type'] = ct
             r2 = await client.post(upload_root + url_path, data=file_path.read_bytes(), headers=headers)
-            print(f'    {url_path} (ct: {ct})')
-            r2.raise_for_status()
+            if r.status_code == 200:
+                upload_info = r2.json()
+                print(f'    {url_path} ct={ct} size={upload_info["size"]:,} total_size={upload_info["total_site_size"]:,}')
+            else:
+                print(f'    ERROR! {url_path} status={r.status_code} response={r.text}')
+                raise ValueError(f'invalid response from "{url_path}: {r.status_code}')
 
         coros = [upload_file(p) for p in root_path.glob('**/*') if p.is_file()]
 

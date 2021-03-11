@@ -3,15 +3,17 @@ import {AUTH_HASH_THRESHOLD, UPLOAD_TTL} from './constants'
 
 declare const HIGH_TMP: KVNamespace
 
-export async function check_create_auth(request: Request): Promise<void> {
+export async function check_create_auth(request: Request): Promise<string> {
   const auth_key = get_auth_header(request)
+  const auth_array = get_auth_array(auth_key)
 
-  const hash = await crypto.subtle.digest('sha-256', auth_key)
+  const hash = await crypto.subtle.digest('sha-256', auth_array)
   const hash_int = new Uint8Array(hash).reduce((a, v) => a * 256 + v, 0)
 
   if (hash_int > AUTH_HASH_THRESHOLD) {
     throw new HttpError(403, 'Invalid Authorisation header, you need to generate a key with a valid hash')
   }
+  return auth_key
 }
 
 export interface UploadAuth {
@@ -21,8 +23,9 @@ export interface UploadAuth {
 
 export async function check_upload_auth(public_key: string, request: Request): Promise<number> {
   const auth_key = get_auth_header(request)
+  const auth_array = get_auth_array(auth_key)
 
-  const upload_auth = await decode_signed_object(auth_key)
+  const upload_auth = await decode_signed_object(auth_array)
 
   if (upload_auth.public_key != public_key) {
     throw new HttpError(400, "Authorisation secret doesn't match public key from upload URL")
@@ -59,15 +62,18 @@ export function create_random_string(length: number): string {
     .substr(0, length)
 }
 
-export function get_auth_header(request: Request): Uint8Array {
+function get_auth_header(request: Request): string {
   const authorisation = request.headers.get('authorisation')
   if (!authorisation) {
     throw new HttpError(401, 'Authorisation header required', {'www-authenticate': 'Basic'})
   }
   // replace gets rid of optional "Bearer " prefix
-  const b64 = authorisation.replace(/^bearer /i, '')
+  return authorisation.replace(/^bearer /i, '')
+}
+
+function get_auth_array(auth_b64: string): Uint8Array {
   try {
-    return Uint8Array.from(atob(b64), c => c.charCodeAt(0))
+    return Uint8Array.from(atob(auth_b64), c => c.charCodeAt(0))
   } catch (err) {
     throw new HttpError(403, 'Invalid Authorisation header, not correctly Base64 encoded')
   }

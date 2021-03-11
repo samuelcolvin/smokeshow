@@ -1,6 +1,16 @@
-import {clean_path, simple_response, cached_proxy, response_from_cache, HttpError, json_response, View} from './utils'
+import {
+  clean_path,
+  simple_response,
+  cached_proxy,
+  response_from_cache,
+  HttpError,
+  json_response,
+  View,
+  list_all,
+  site_summary,
+} from './utils'
 import {check_create_auth, create_random_string, check_upload_auth, sign_auth} from './auth'
-import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL} from './constants'
+import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL, SITES_PER_DAY, MAX_SITE_SIZE} from './constants'
 import styles from './index/main.scss'
 import readme from '../README.md'
 import github_svg from '!raw-loader!./index/github.svg'
@@ -9,18 +19,6 @@ import index_html from '!raw-loader!./index/index.html'
 declare const HIGH_TMP: KVNamespace
 
 const index_html_final = index_html.replace('{github_svg}', github_svg).replace('{readme}', readme)
-
-interface SiteSummary {
-  files?: string[]
-}
-
-async function site_summary(public_key: string): Promise<SiteSummary> {
-  const raw = await HIGH_TMP.get(`site:${public_key}:${INFO_FILE_NAME}`, 'json')
-  const obj = raw as Record<string, any>
-  const files = await HIGH_TMP.list({prefix: `site:${public_key}:`})
-  obj.files = files.keys.map(k => k.name.substr(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)
-  return obj
-}
 
 function* get_index_options(public_key: string, path: string) {
   yield `site:${public_key}:${path}index.html`
@@ -75,12 +73,20 @@ async function post_file(request: Request, public_key: string, path: string): Pr
 
   const content_type = request.headers.get('content-type')
   const blob = await request.blob()
-  await HIGH_TMP.put(`site:${public_key}:${path}`, blob.stream(), {
+  const size = blob.size
+  const prefix = `site:${public_key}:`
+  const site_files = await list_all(prefix)
+  const total_site_size = size + site_files.map(k => k.metadata.size).reduce((a, v) => a + v, 0)
+  if (total_site_size > MAX_SITE_SIZE) {
+    throw new HttpError(429, `You've exceeded the site size limit of ${MAX_SITE_SIZE}.`)
+  }
+
+  await HIGH_TMP.put(prefix + path, blob.stream(), {
     expiration: Math.round((creation_ms + SITE_TTL) / 1000),
-    metadata: {content_type},
+    metadata: {content_type, size},
   })
 
-  return json_response({path, content_type})
+  return json_response({path, content_type, size, total_site_size})
 }
 
 const site_path_regex = new RegExp(`^\\/([a-z0-9]{${PUBLIC_KEY_LENGTH}})(\\/.*)`)
@@ -108,7 +114,7 @@ export const views: View[] = [
     match: '/create/',
     allow: 'POST',
     view: async (request, info) => {
-      await check_create_auth(request)
+      const auth_key = await check_create_auth(request)
       const public_key = create_random_string(PUBLIC_KEY_LENGTH)
 
       if (await HIGH_TMP.get(`site:${public_key}:${INFO_FILE_NAME}`)) {
@@ -117,6 +123,15 @@ export const views: View[] = [
       }
       const creation = new Date()
       const creation_ms = creation.getTime()
+
+      const created_prefix = `created:${auth_key}:`
+      const existing_sites = await HIGH_TMP.list({prefix: created_prefix})
+      if (existing_sites.keys.length > SITES_PER_DAY) {
+        // too many site created in the last 24 hours
+        throw new HttpError(429, `You've exceeded the 24h creation limit of ${SITES_PER_DAY} sites.`)
+      }
+      await HIGH_TMP.put(created_prefix + public_key, `${creation_ms}`, {expirationTtl: 3600 * 24})
+
       const secret_key = await sign_auth({public_key, creation: creation_ms})
 
       const site_expiration_date = new Date(creation_ms + SITE_TTL)
@@ -127,8 +142,10 @@ export const views: View[] = [
         site_creation: creation.toISOString(),
         site_expiration: site_expiration_date.toISOString(),
       }
-      await HIGH_TMP.put(`site:${public_key}:${INFO_FILE_NAME}`, JSON.stringify(site_info, null, 2), {
+      const info_json = JSON.stringify(site_info, null, 2)
+      await HIGH_TMP.put(`site:${public_key}:${INFO_FILE_NAME}`, info_json, {
         expiration: Math.round(site_expiration_date.getTime() / 1000),
+        metadata: {content_type: 'application/json', size: info_json.length},
       })
 
       return json_response({

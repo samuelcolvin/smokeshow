@@ -1,4 +1,4 @@
-import {SITE_TTL} from './constants'
+import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL} from './constants'
 
 declare const DEBUG: string | undefined
 declare const HIGH_TMP: KVNamespace
@@ -104,4 +104,31 @@ export function clean_path(url: URL): string {
     path += '/'
   }
   return path
+}
+
+interface KvListItem {
+  name: string
+  expiration: number
+  metadata: {content_type: string; size: number}
+}
+
+export async function list_all(prefix: string): Promise<KvListItem[]> {
+  const items: KvListItem[] = []
+  let value = await HIGH_TMP.list({prefix: prefix})
+  while (true) {
+    items.push(...(value.keys as KvListItem[]))
+    if (value.list_complete) {
+      return items
+    }
+    value = await HIGH_TMP.list({prefix: prefix, cursor: value.cursor})
+  }
+}
+
+export async function site_summary(public_key: string): Promise<Record<string, any>> {
+  const raw = await HIGH_TMP.get(`site:${public_key}:${INFO_FILE_NAME}`, 'json')
+  const obj = raw as Record<string, any>
+  const files = await list_all(`site:${public_key}:`)
+  obj.files = files.map(k => k.name.substr(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)
+  obj.total_size = files.map(k => k.metadata.size).reduce((a, v) => a + v, 0)
+  return obj
 }
