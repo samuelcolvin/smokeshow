@@ -1,8 +1,14 @@
-import {clean_path, html_response, HttpError, json_response, View} from './utils'
+import {clean_path, simple_response, cached_proxy, response_from_cache, HttpError, json_response, View} from './utils'
 import {check_create_auth, create_random_string, check_upload_auth, sign_auth} from './auth'
 import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL} from './constants'
+import styles from './index/main.scss'
+import readme from '../README.md'
+import github_svg from '!raw-loader!./index/github.svg'
+import index_html from '!raw-loader!./index/index.html'
 
 declare const HIGH_TMP: KVNamespace
+
+const index_html_final = index_html.replace('{github_svg}', github_svg).replace('{readme}', readme)
 
 interface SiteSummary {
   files?: string[]
@@ -58,10 +64,7 @@ async function get_file(request: Request, public_key: string, path: string): Pro
     }
   }
 
-  const headers: Record<string, string> = {}
-  const metadata: {content_type?: string} = (v.metadata as any) || {}
-  headers['content-type'] = metadata.content_type || 'application/octet-stream'
-  return new Response(v.value, {status, headers})
+  return response_from_cache(v, status)
 }
 
 async function post_file(request: Request, public_key: string, path: string): Promise<Response> {
@@ -85,13 +88,26 @@ const site_path_regex = new RegExp(`^\\/([a-z0-9]{${PUBLIC_KEY_LENGTH}})(\\/.*)`
 export const views: View[] = [
   {
     match: '/',
-    allow: 'GET',
-    view: async () =>
-      html_response(`
-<h1>Index</h1>
-
-<p>This is the index page, it doesn't say much interesting yet</p>
-`),
+    view: async () => simple_response(index_html_final, 'text/html'),
+  },
+  {
+    match: '/styles.css',
+    view: async () => simple_response(styles, 'text/css'),
+  },
+  {
+    match: '/fonts/Inter-Regular.woff',
+    view: () =>
+      cached_proxy('https://raw.githubusercontent.com/primer/css/v15.2.0/fonts/Inter-Regular.woff', 'font/woff'),
+  },
+  {
+    match: '/fonts/Inter-Medium.woff',
+    view: () =>
+      cached_proxy('https://raw.githubusercontent.com/primer/css/v15.2.0/fonts/Inter-Medium.woff', 'font/woff'),
+  },
+  {
+    match: '/fonts/Inter-Bold.woff',
+    view: () =>
+      cached_proxy('https://raw.githubusercontent.com/primer/css/v15.2.0/fonts/Inter-Bold.woff', 'font/woff'),
   },
   {
     match: '/create/',
