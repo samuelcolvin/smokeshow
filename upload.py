@@ -45,12 +45,12 @@ async def main(path: str) -> Optional[str]:
             if ct:
                 headers['Content-Type'] = ct
             r2 = await client.post(upload_root + url_path, data=file_path.read_bytes(), headers=headers)
-            if r.status_code == 200:
+            if r2.status_code == 200:
                 upload_info = r2.json()
                 print(f'    {url_path} ct={ct} size={upload_info["size"]:,} total_size={upload_info["total_site_size"]:,}')
             else:
-                print(f'    ERROR! {url_path} status={r.status_code} response={r.text}')
-                raise ValueError(f'invalid response from "{url_path}: {r.status_code}')
+                print(f'    ERROR! {url_path} status={r2.status_code} response={r2.text}')
+                raise ValueError(f'invalid response from "{url_path}" status={r2.status_code} response={r2.text}')
 
         coros = [upload_file(p) for p in root_path.glob('**/*') if p.is_file()]
 

@@ -6,7 +6,7 @@ route = ""
 zone_id = ""
 webpack_config = "webpack.config.js"
 kv_namespaces = [
-	{binding="HIGH_TMP", preview_id="0fe96c6c7e6e4d6c8194148931a60453", id="f966a19796ee425ba126393a83111beb"}
+	{binding="HIGH_TMP", preview_id="01b0830ca2964ab295de803b44b9b26c", id="f966a19796ee425ba126393a83111beb"}
 ]
 
 [vars]

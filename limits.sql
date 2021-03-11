@@ -21,3 +21,22 @@ create or replace function recent_sites(auth_key text) returns int as $$
     return site_count;
   end;
 $$ language plpgsql;
+
+create or replace function new_file(public_key text, file_size int, size_limit int) returns integer as $$
+  declare
+    current_site_size int;
+    site_id int;
+  begin
+    -- we could do some complex locking here, perhaps with "SHARE UPDATE EXCLUSIVE", not sure it's worth its
+    select sites.id, sites.site_size into site_id, current_site_size
+    from sites
+    where sites.public_key=new_file.public_key;
+
+    if current_site_size + file_size > size_limit then
+      return null;
+    else
+      update sites set site_size=site_size + file_size where id=site_id returning site_size into current_site_size;
+      return current_site_size;
+    end if;
+  end;
+$$ language plpgsql;

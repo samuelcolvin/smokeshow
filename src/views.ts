@@ -6,12 +6,11 @@ import {
   HttpError,
   json_response,
   View,
-  list_all,
   site_summary,
 } from './utils'
 import {check_create_auth, create_random_string, check_upload_auth, sign_auth} from './auth'
-import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL, SITES_PER_DAY, MAX_SITE_SIZE} from './constants'
-import {create_site_check} from './limits'
+import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL} from './constants'
+import {create_site_check, new_file_check} from './limits'
 import styles from './index/main.scss'
 import readme from '../README.md'
 import github_svg from '!raw-loader!./index/github.svg'
@@ -75,14 +74,10 @@ async function post_file(request: Request, public_key: string, path: string): Pr
   const content_type = request.headers.get('content-type')
   const blob = await request.blob()
   const size = blob.size
-  const prefix = `site:${public_key}:`
-  const site_files = await list_all(prefix)
-  const total_site_size = size + site_files.map(k => k.metadata.size).reduce((a, v) => a + v, 0)
-  if (total_site_size > MAX_SITE_SIZE) {
-    throw new HttpError(429, `You've exceeded the site size limit of ${MAX_SITE_SIZE}.`)
-  }
 
-  await HIGH_TMP.put(prefix + path, blob.stream(), {
+  const total_site_size = await new_file_check(public_key, size)
+
+  await HIGH_TMP.put(`site:${public_key}:${path}`, blob.stream(), {
     expiration: Math.round((creation_ms + SITE_TTL) / 1000),
     metadata: {content_type, size},
   })
@@ -123,7 +118,9 @@ export const views: View[] = [
         throw new HttpError(409, 'Site with this public key already exists')
       }
       const sites_created_24h = await create_site_check(public_key, auth_key)
-      console.log(`creating new site public_key=${public_key} sites_created_24h=${sites_created_24h} auth_key=${auth_key}`)
+      console.log(
+        `creating new site public_key=${public_key} sites_created_24h=${sites_created_24h} auth_key=${auth_key}`,
+      )
 
       const creation = new Date()
       const creation_ms = creation.getTime()

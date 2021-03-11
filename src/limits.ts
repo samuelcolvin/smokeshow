@@ -1,5 +1,5 @@
 import {HttpError} from './utils'
-import {SITES_PER_DAY} from './constants'
+import {SITES_PER_DAY, MAX_SITE_SIZE} from './constants'
 
 declare const postgrest_root: string
 declare const postgrest_apikey: string
@@ -15,9 +15,19 @@ export async function create_site_check(public_key: string, auth_key: string): P
   return recent_site
 }
 
+export async function new_file_check(public_key: string, file_size: number): Promise<number> {
+  const data = {public_key, file_size, size_limit: MAX_SITE_SIZE}
+  const total_size = await postgrest_post('/rpc/new_file', data)
+
+  if (total_size == null) {
+    throw new HttpError(429, `You've exceeded the site size limit of ${MAX_SITE_SIZE}.`)
+  }
+  return total_size as number
+}
+
 const allowed_responses = new Set([200, 201])
 
-async function postgrest_get(path: string, args: Record<string, string> = {}): Promise<any> {
+async function postgrest_get(path: string, args: Record<string, string | number> = {}): Promise<any> {
   const request_url = postgrest_root + path + build_args(args)
   const r = await fetch(request_url, {headers: {apikey: postgrest_apikey}})
   if (!allowed_responses.has(r.status)) {
@@ -28,8 +38,8 @@ async function postgrest_get(path: string, args: Record<string, string> = {}): P
   return await r.json()
 }
 
-async function postgrest_post(path: string, data: Record<string, string>, args: Record<string, string> = {}): Promise<void> {
-  const request_url = postgrest_root + path + build_args(args)
+async function postgrest_post(path: string, data: Record<string, any>): Promise<any> {
+  const request_url = postgrest_root + path
   const r = await fetch(request_url, {
     method: 'POST',
     headers: {apikey: postgrest_apikey, 'content-type': 'application/json'},
@@ -40,11 +50,19 @@ async function postgrest_post(path: string, data: Record<string, string>, args: 
     console.error('error making POST request to database', {request_url, response_status: r.status, response_text})
     throw new HttpError(502, `error making request to database, response ${r.status}`)
   }
+  try {
+    return await r.json()
+  } catch (e) {
+    return null
+  }
 }
 
-function build_args(args: Record<string, string>): string {
+function build_args(args: Record<string, string | number>): string {
   const arg_list: string[] = []
-  const add_arg = (n: string, v: string) => arg_list.push(encodeURIComponent(n) + '=' + encodeURIComponent(v))
+
+  const add_arg = (n: string, v: string | number) =>
+    arg_list.push(encodeURIComponent(n) + '=' + encodeURIComponent(v.toString()))
+
   for (const [name, value] of Object.entries(args)) {
     if (Array.isArray(value)) {
       for (const value_ of value) {
