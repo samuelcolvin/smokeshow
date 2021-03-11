@@ -11,6 +11,7 @@ import {
 } from './utils'
 import {check_create_auth, create_random_string, check_upload_auth, sign_auth} from './auth'
 import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL, SITES_PER_DAY, MAX_SITE_SIZE} from './constants'
+import {create_site_check} from './limits'
 import styles from './index/main.scss'
 import readme from '../README.md'
 import github_svg from '!raw-loader!./index/github.svg'
@@ -121,16 +122,11 @@ export const views: View[] = [
         // shouldn't happen
         throw new HttpError(409, 'Site with this public key already exists')
       }
+      const sites_created_24h = await create_site_check(public_key, auth_key)
+      console.log(`creating new site public_key=${public_key} sites_created_24h=${sites_created_24h} auth_key=${auth_key}`)
+
       const creation = new Date()
       const creation_ms = creation.getTime()
-
-      const created_prefix = `created:${auth_key}:`
-      const existing_sites = await HIGH_TMP.list({prefix: created_prefix})
-      if (existing_sites.keys.length > SITES_PER_DAY) {
-        // too many site created in the last 24 hours
-        throw new HttpError(429, `You've exceeded the 24h creation limit of ${SITES_PER_DAY} sites.`)
-      }
-      await HIGH_TMP.put(created_prefix + public_key, `${creation_ms}`, {expirationTtl: 3600 * 24})
 
       const secret_key = await sign_auth({public_key, creation: creation_ms})
 
@@ -150,6 +146,7 @@ export const views: View[] = [
 
       return json_response({
         message: 'New site created successfully',
+        sites_created_24h,
         secret_key,
         upload_expiration: upload_expiration_date.toISOString(),
         ...site_info,
