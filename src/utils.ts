@@ -26,6 +26,7 @@ export async function cached_proxy(url: string, content_type: string): Promise<R
   if (cache_value.value) {
     return response_from_cache(cache_value, 3600)
   }
+  console.log(`"${url}" not yet cached, downloading`)
   const r = await fetch(url)
   if (r.status != 200) {
     throw new HttpError(502, `Error getting "${url}", response: ${r.status}`)

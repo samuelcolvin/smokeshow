@@ -95,19 +95,14 @@ export const views: View[] = [
     view: async () => simple_response(styles, 'text/css', 3600),
   },
   {
-    match: '/fonts/Inter-Regular.woff',
-    view: () =>
-      cached_proxy('https://raw.githubusercontent.com/primer/css/v15.2.0/fonts/Inter-Regular.woff', 'font/woff'),
-  },
-  {
-    match: '/fonts/Inter-Medium.woff',
-    view: () =>
-      cached_proxy('https://raw.githubusercontent.com/primer/css/v15.2.0/fonts/Inter-Medium.woff', 'font/woff'),
-  },
-  {
-    match: '/fonts/Inter-Bold.woff',
-    view: () =>
-      cached_proxy('https://raw.githubusercontent.com/primer/css/v15.2.0/fonts/Inter-Bold.woff', 'font/woff'),
+    match: /^\/fonts\/Inter-(Regular|Medium|Bold).(woff|woff2)$/,
+    view: (request, info) => {
+      const [, weight, ext] = info.match as RegExpMatchArray
+      return cached_proxy(
+        `https://raw.githubusercontent.com/rsms/inter/v3.15/docs/font-files/Inter-${weight}.${ext}`,
+        `font/${ext}`,
+      )
+    },
   },
   {
     match: '/create/',

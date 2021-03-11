@@ -1,5 +1,7 @@
 # hightmp
 
+**Work in progress!** Not yet ready for use.
+
 Deploy temporary websites via HTTP.
 
 If you need to do any of the following:
