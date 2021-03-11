@@ -88,11 +88,11 @@ const site_path_regex = new RegExp(`^\\/([a-z0-9]{${PUBLIC_KEY_LENGTH}})(\\/.*)`
 export const views: View[] = [
   {
     match: '/',
-    view: async () => simple_response(index_html_final, 'text/html'),
+    view: async () => simple_response(index_html_final, 'text/html', 3600),
   },
   {
     match: '/styles.css',
-    view: async () => simple_response(styles, 'text/css'),
+    view: async () => simple_response(styles, 'text/css', 3600),
   },
   {
     match: '/fonts/Inter-Regular.woff',
