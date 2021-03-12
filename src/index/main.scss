@@ -30,9 +30,10 @@ body {
 main {
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  width: 902px;
-  max-width: calc(100vw - 20px);
+  width: min(calc(100vw - 20px), 902px);
   padding: 20px 15px 20px;
+  box-sizing: border-box;
+  word-wrap: break-word;
 }
 
 header {

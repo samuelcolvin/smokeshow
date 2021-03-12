@@ -1,6 +1,6 @@
 # hightmp
 
-**Work in progress!** Not yet ready for use.
+[![CI](https://github.com/samuelcolvin/hightmp/workflows/CI/badge.svg?event=push)](https://github.com/samuelcolvin/hightmp/actions?query=event%3Apush+branch%3Amain+workflow%3ACI)
 
 Deploy temporary websites via HTTP.
 
