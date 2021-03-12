@@ -1,6 +1,7 @@
 @function font-src($weight) {
-  $full-name: "Inter-" + $weight;
-  @return local($full-name), url("/fonts/" + $full-name + ".woff2") format("woff2"), url("/fonts/" + $full-name + ".woff") format("woff");
+  $full-name: 'Inter-' + $weight;
+  @return local($full-name), url('/fonts/' + $full-name + '.woff2') format('woff2'),
+    url('/fonts/' + $full-name + '.woff') format('woff');
 }
 
 @font-face {

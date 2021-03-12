@@ -1,6 +1,16 @@
-import {clean_path, simple_response, cached_proxy, response_from_cache, HttpError, json_response, View} from './utils'
+import {
+  clean_path,
+  simple_response,
+  cached_proxy,
+  response_from_cache,
+  HttpError,
+  json_response,
+  View,
+  site_summary,
+} from './utils'
 import {check_create_auth, create_random_string, check_upload_auth, sign_auth} from './auth'
 import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL} from './constants'
+import {create_site_check, new_file_check} from './limits'
 import styles from './index/main.scss'
 import readme from '../README.md'
 import github_svg from '!raw-loader!./index/github.svg'
@@ -9,18 +19,6 @@ import index_html from '!raw-loader!./index/index.html'
 declare const HIGH_TMP: KVNamespace
 
 const index_html_final = index_html.replace('{github_svg}', github_svg).replace('{readme}', readme)
-
-interface SiteSummary {
-  files?: string[]
-}
-
-async function site_summary(public_key: string): Promise<SiteSummary> {
-  const raw = await HIGH_TMP.get(`site:${public_key}:${INFO_FILE_NAME}`, 'json')
-  const obj = raw as Record<string, any>
-  const files = await HIGH_TMP.list({prefix: `site:${public_key}:`})
-  obj.files = files.keys.map(k => k.name.substr(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)
-  return obj
-}
 
 function* get_index_options(public_key: string, path: string) {
   yield `site:${public_key}:${path}index.html`
@@ -75,12 +73,16 @@ async function post_file(request: Request, public_key: string, path: string): Pr
 
   const content_type = request.headers.get('content-type')
   const blob = await request.blob()
+  const size = blob.size
+
+  const total_site_size = await new_file_check(public_key, size)
+
   await HIGH_TMP.put(`site:${public_key}:${path}`, blob.stream(), {
     expiration: Math.round((creation_ms + SITE_TTL) / 1000),
-    metadata: {content_type},
+    metadata: {content_type, size},
   })
 
-  return json_response({path, content_type})
+  return json_response({path, content_type, size, total_site_size})
 }
 
 const site_path_regex = new RegExp(`^\\/([a-z0-9]{${PUBLIC_KEY_LENGTH}})(\\/.*)`)
@@ -108,15 +110,21 @@ export const views: View[] = [
     match: '/create/',
     allow: 'POST',
     view: async (request, info) => {
-      await check_create_auth(request)
+      const auth_key = await check_create_auth(request)
       const public_key = create_random_string(PUBLIC_KEY_LENGTH)
 
       if (await HIGH_TMP.get(`site:${public_key}:${INFO_FILE_NAME}`)) {
         // shouldn't happen
         throw new HttpError(409, 'Site with this public key already exists')
       }
+      const sites_created_24h = await create_site_check(public_key, auth_key)
+      console.log(
+        `creating new site public_key=${public_key} sites_created_24h=${sites_created_24h} auth_key=${auth_key}`,
+      )
+
       const creation = new Date()
       const creation_ms = creation.getTime()
+
       const secret_key = await sign_auth({public_key, creation: creation_ms})
 
       const site_expiration_date = new Date(creation_ms + SITE_TTL)
@@ -127,12 +135,15 @@ export const views: View[] = [
         site_creation: creation.toISOString(),
         site_expiration: site_expiration_date.toISOString(),
       }
-      await HIGH_TMP.put(`site:${public_key}:${INFO_FILE_NAME}`, JSON.stringify(site_info, null, 2), {
+      const info_json = JSON.stringify(site_info, null, 2)
+      await HIGH_TMP.put(`site:${public_key}:${INFO_FILE_NAME}`, info_json, {
         expiration: Math.round(site_expiration_date.getTime() / 1000),
+        metadata: {content_type: 'application/json', size: info_json.length},
       })
 
       return json_response({
         message: 'New site created successfully',
+        sites_created_24h,
         secret_key,
         upload_expiration: upload_expiration_date.toISOString(),
         ...site_info,

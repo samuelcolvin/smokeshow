@@ -11,8 +11,8 @@ pre code {
   display: block;
 }
 
-
-.hljs-comment, .hljs-quote {
+.hljs-comment,
+.hljs-quote {
   color: var(--highlight-comment);
 }
 
@@ -72,4 +72,3 @@ pre code {
 .hljs-builtin-name {
   color: var(--highlight-variable);
 }
-
