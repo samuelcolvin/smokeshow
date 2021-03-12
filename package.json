@@ -6,8 +6,8 @@
   "scripts": {
     "build": "webpack",
     "dev": "NODE_ENV=development npm run build",
-    "format": "prettier --write 'src/**/*.{ts,js,css,json,md}'",
-    "lint": "eslint --max-warnings=0 src && prettier --check 'src/**/*.{js,ts,tsx,css,scss}'"
+    "format": "prettier --write 'src/**/*.{js,ts,css,scss,html}'",
+    "lint": "eslint --max-warnings=0 src && prettier --check 'src/**/*.{js,ts,css,scss,html}'"
   },
   "author": "author",
   "license": "MIT",
