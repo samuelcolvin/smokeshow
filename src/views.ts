@@ -158,6 +158,10 @@ export function smart_referrer_redirect(request: Request, url: URL): string | un
   // magic to redirect requests where a site had a link to a resource assuming it was deploy on route
   // eg. a request to /favicon.ico with a referrer .../<site pk>/... will be redirected to .../<site pk>/favicon.ico
 
+  if (request.method != 'GET') {
+    return
+  }
+
   if (url.pathname.match(site_path_regex)) {
     // request is already to a site
     return

@@ -6,7 +6,6 @@ addEventListener('fetch', e => e.respondWith(handle(e)))
 
 async function handle(event: FetchEvent) {
   const {request} = event
-  console.debug(`${request.method} ${request.url}`)
 
   try {
     return await route(event)
@@ -28,11 +27,9 @@ async function route(event: FetchEvent) {
   const url = new URL(request.url)
   const cleaned_path = clean_path(url)
 
-  if (request.method == 'GET') {
-    const redirect_url = smart_referrer_redirect(request, url)
-    if (redirect_url) {
-      return Response.redirect(redirect_url, 307)
-    }
+  const redirect_url = smart_referrer_redirect(request, url)
+  if (redirect_url) {
+    return Response.redirect(redirect_url, 307)
   }
 
   for (const view of views) {
