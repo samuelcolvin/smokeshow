@@ -1,4 +1,4 @@
-import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL} from './constants'
+import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH} from './constants'
 
 declare const DEBUG: string | undefined
 declare const HIGH_TMP: KVNamespace

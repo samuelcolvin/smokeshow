@@ -108,7 +108,7 @@ TODO...
 The following limits apply to usage of hightmp:
 * **50**: maximum number of sites you can create a day with a given key
 * **30 MB**: maximum site size
-* **25 MB**: maximum size of a file - this a limit of [Cloudflare's KV store](https://developers.cloudflare.com/workers/platform/limits#kv-limits)
+* **25 MB**: maximum size of a file - this is a limit of [Cloudflare's KV store](https://developers.cloudflare.com/workers/platform/limits#kv-limits)
 
 **Notice:** hightmp is currently free for anyone to use, but if it starts to cost me a significant amount I
 might reduce the limits, or stop it being free. Please [watch the github repo](https://github.com/samuelcolvin/hightmp)
