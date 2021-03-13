@@ -1,0 +1,68 @@
+@import 'variables';
+
+body {
+  @each $name, $color in $light-colors {
+    --#{$name}: #{$color};
+  }
+  &.dark {
+    @each $name, $color in $dark-colors {
+      --#{$name}: #{$color};
+    }
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+  font-family: $font-family;
+  display: flex;
+  justify-content: center;
+  margin: 10px 10px 20px;
+  font-size: 16px;
+}
+
+@media only screen and (min-width: 600px) {
+  body {
+    margin: 40px 10px 60px;
+  }
+}
+
+main {
+  width: min(calc(100vw - 20px), 902px);
+  box-sizing: border-box;
+}
+
+svg {
+  width: 20px;
+  fill: var(--text);
+}
+
+nav {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+article {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 20px 15px 20px;
+  word-wrap: break-word;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+
+  a {
+    display: flex;
+  }
+  svg {
+    margin: 0 8px;
+  }
+}
+
+@import 'highlight';
+@import 'fonts';
+@import 'switch';
+@import 'markdown';

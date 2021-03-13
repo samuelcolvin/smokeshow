@@ -7,26 +7,56 @@
     <title>hightmp</title>
     <meta name="description" content="Deploy temporary websites." />
 
-    <meta name="msapplication-TileColor" content="#1E1F2E" />
-    <meta name="theme-color" content="#1E1F2E" />
+    <meta name="msapplication-TileColor" content="#0d1117" />
+    <meta name="theme-color" content="#0d1117" />
 
     <link rel="preload" href="/fonts/Inter-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
     <link rel="preload" href="/fonts/Inter-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
     <link rel="preload" href="/fonts/Inter-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
 
-    <link rel="preload" href="/styles.css" as="style" crossorigin="anonymous" />
-    <link rel="stylesheet" href="/styles.css" crossorigin="anonymous" />
+    <link rel="preload" href="/styles.css?v=1" as="style" crossorigin="anonymous" />
+    <link rel="stylesheet" href="/styles.css?v=1" crossorigin="anonymous" />
   </head>
   <body>
     <main>
-      <header>
-        <div class="weight-medium">README.md</div>
-        <a href="https://github.com/samuelcolvin/hightmp">
-          {github_svg}
-          <span>samuelcolvin/hightmp</span>
-        </a>
-      </header>
-      {readme}
+      <nav>
+        <div class="dark-control">
+          {moon_svg}
+          <div class="switch">
+            <span id="slider"></span>
+          </div>
+        </div>
+        <script>
+          function set_theme(dark) {
+            if (dark) {
+              document.body.classList.add('dark')
+            } else {
+              document.body.classList.remove('dark')
+            }
+            localStorage.dark = JSON.stringify(dark)
+          }
+
+          if (localStorage.dark) {
+            set_theme(JSON.parse(localStorage.dark))
+          } else {
+            set_theme(matchMedia('(prefers-color-scheme: dark)').matches)
+          }
+
+          document.getElementById('slider').onclick = () => {
+            set_theme(!document.body.classList.contains('dark'))
+          }
+        </script>
+      </nav>
+      <article>
+        <header>
+          <div class="weight-medium">README.md</div>
+          <a href="https://github.com/samuelcolvin/hightmp">
+            {github_svg}
+            <span>samuelcolvin/hightmp</span>
+          </a>
+        </header>
+        {readme}
+      </article>
     </main>
   </body>
 </html>

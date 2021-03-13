@@ -1,0 +1,41 @@
+@import 'variables';
+
+a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+h1 {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+}
+
+.weight-medium {
+  font-weight: 600;
+}
+
+p,
+ul {
+  line-height: 1.5;
+  code {
+    font-family: $font-family-monospace;
+    padding: 0.2em 0.4em;
+    margin: 0;
+    font-size: 85%;
+    background-color: var(--code-background);
+    border-radius: 6px;
+  }
+}
+
+li + li {
+  margin-top: 0.25em;
+}

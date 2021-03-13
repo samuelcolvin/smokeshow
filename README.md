@@ -50,7 +50,7 @@ Once you have your key, you can create a site using the following `curl` command
 
 ```bash
 curl -X POST \
-  -H 'Authorisation:{generated-key}' \
+  -H 'Authorisation:{generated-key-from-above}' \
   https://hightmp.samuelcolvin.workers.dev/create/
 ```
 This should create a site and return a JSON object with details required
@@ -86,18 +86,19 @@ The following path equivalence is supported:
 
 ### Referrer Redirects
 
-_hightmp_ deploys sites at a random subdirectory (e.g. `/3y4x0n6a200u2n6m316j/`) this works fine, but occasionally
-leads to problems with sites that assume they will be deployed at root (`/`), we work round that problem by
+_hightmp_ deploys sites at a random subdirectory (e.g. `/3y4x0n6a200u2n6m316j/`) this works fine, but could occasionally
+lead to problems with sites that assume they will be deployed at root (`/`), we work round that problem by
 inspecting the `Referer` header and redirecting to the intended page.
 
-**Example**:
-* The page `https://hightmp.samuelcolvin.workers.dev/3y4x0n6a200u2n6m316j/foobar/` has a link to `/another/` \
-  which we want to resolve to `https://hightmp.samuelcolvin.workers.dev/3y4x0n6a200u2n6m316j/another/`
-* When a user clicks on the link, the browser loads `https://hightmp.samuelcolvin.workers.dev/another/`
-* _hightmp_ catches this request, inspects the `Referer` headers and spots `/3y4x0n6a200u2n6m316j/foobar/`
-* _hightmp_ calculates that the request should be to `https://hightmp.samuelcolvin.workers.dev/3y4x0n6a200u2n6m316j/another/`
-* _hightmp_ returns a `307` redirect to that page
-* the browser loads the correct page
+**Example** of how this works:
+* 🔗 The page `https://hightmp.samuelcolvin.workers.dev/3y4x0n6a200u2n6m316j/foobar/` has a link to `/another/` \
+  which of course we want to resolve to `https://hightmp.samuelcolvin.workers.dev/3y4x0n6a200u2n6m316j/another/`
+* 👆 When a user clicks on the link, the browser loads `https://hightmp.samuelcolvin.workers.dev/another/`
+* 🎯 _hightmp_ catches this request, inspects the `Referer` headers and spots `/3y4x0n6a200u2n6m316j/foobar/`
+* 🤔 _hightmp_ calculates that the request should be to `https://hightmp.samuelcolvin.workers.dev/3y4x0n6a200u2n6m316j/another/`
+* ↪️ _hightmp_ returns a `307` redirect to that page
+* ✔️ the browser loads the correct page
+* 😊 user is happy
 
 ## CLI usage
 
@@ -105,11 +106,11 @@ TODO...
 
 ## Limits
 
-The following limits apply to usage of hightmp:
+The following limits apply to usage of _hightmp_:
 * **50**: maximum number of sites you can create a day with a given key
 * **30 MB**: maximum site size
 * **25 MB**: maximum size of a file - this is a limit of [Cloudflare's KV store](https://developers.cloudflare.com/workers/platform/limits#kv-limits)
 
-**Notice:** hightmp is currently free for anyone to use, but if it starts to cost me a significant amount I
+**Notice:** _hightmp_ is currently free for anyone to use, but if it starts to cost me a significant amount, I
 might reduce the limits, or stop it being free. Please [watch the github repo](https://github.com/samuelcolvin/hightmp)
-to get notifications of changes to the service.
+to get notifications of changes to the service if you're using it regularly.

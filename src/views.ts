@@ -11,14 +11,18 @@ import {
 import {check_create_auth, create_random_string, check_upload_auth, sign_auth} from './auth'
 import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL} from './constants'
 import {create_site_check, new_file_check} from './limits'
-import styles from './index/main.scss'
+import styles from './index/styles/main.scss'
 import readme from '../README.md'
 import github_svg from '!raw-loader!./index/github.svg'
+import moon_svg from '!raw-loader!./index/moon.svg'
 import index_html from '!raw-loader!./index/index.html'
 
 declare const HIGH_TMP: KVNamespace
 
-const index_html_final = index_html.replace('{github_svg}', github_svg).replace('{readme}', readme)
+const index_html_final = index_html
+  .replace('{github_svg}', github_svg)
+  .replace('{readme}', readme)
+  .replace('{moon_svg}', moon_svg)
 
 function* get_index_options(public_key: string, path: string) {
   yield `site:${public_key}:${path}index.html`
