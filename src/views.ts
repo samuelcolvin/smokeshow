@@ -20,8 +20,8 @@ import index_html from '!raw-loader!./index/index.html'
 declare const HIGH_TMP: KVNamespace
 
 const index_html_final = index_html
-  .replace('{github_svg}', github_svg)
   .replace('{readme}', readme)
+  .replace('{github_svg}', github_svg)
   .replace('{moon_svg}', moon_svg)
 
 function* get_index_options(public_key: string, path: string) {
