@@ -50,9 +50,9 @@ export function response_from_cache(cache_value: CacheValue, expires: number | n
 function build_headers(content_type: string | undefined, expires_in: number | null): Record<string, string> {
   const headers: Record<string, string> = {}
   headers['content-type'] = content_type || 'application/octet-stream'
-  // if (expires_in != null) {
-  //   headers['expires'] = new Date(Date.now() + expires_in * 1000).toUTCString()
-  // }
+  if (expires_in != null) {
+    headers['expires'] = new Date(Date.now() + expires_in * 1000).toUTCString()
+  }
   return headers
 }
 
