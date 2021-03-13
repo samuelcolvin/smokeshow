@@ -1,0 +1,48 @@
+$width: 45px;
+$height: 25px;
+$border: 4px;
+$ball-size: $height - $border * 2;
+$translate: $width - $ball-size - $border * 2;
+
+.dark-control svg {
+  margin: 0 5px 2px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: $width;
+  height: $height;
+
+  // prevent square box upon tap on mobile
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+#slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+  border-radius: $height;
+  &:before {
+    position: absolute;
+    content: '';
+    border-radius: 50%;
+    height: $ball-size;
+    width: $ball-size;
+    left: $border;
+    bottom: $border;
+    background-color: white;
+    transition: 0.4s;
+  }
+}
+
+body.dark #slider:before {
+  transform: translateX($translate);
+}
