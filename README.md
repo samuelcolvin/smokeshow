@@ -5,18 +5,18 @@
 Deploy temporary websites via HTTP.
 
 If you need to do any of the following:
-* preview a site before launch
-* view the HTML version of coverage reports
-* create a quick website to show someone something
+* 🚀 preview a site before launch
+* 🙈 view the HTML version of coverage reports
+* 👀 create a quick website to show someone something
 
 _hightmp_ is here to help, it lets you use HTTP to upload files to create a static website.
 30 days after that site is created, it vanishes.
 
 A few advantages:
-* It's free
-* You don't need to sign up, just create a key using the script below
-* It's super fast around the world, _hightmp_ uses CloudFlare's 280+ edge servers to store files meaning
-  their next to your users
+* 💸 It's free
+* 🔑 You don't need to sign up, just create a key using the script below
+* 💨 It's super fast around the world, _hightmp_ uses CloudFlare's 280+ edge locations to store files meaning
+  they're next to your users
 
 ## Usage
 
@@ -44,27 +44,38 @@ while True:
         print(f'\nSuccess! Key found after {attempts:,} attempts:\n\n    {key}\n')
         break
 ```
-(This script should take between a few seconds and a minute to generate a valid key)
+_(This script should take between a few seconds and a minute to generate a valid key)_
 
 Once you have your key, you can create a site using the following `curl` command:
 
 ```bash
 curl -X POST \
-  -H 'Authorisation:{generated-key-from-above}' \
-  https://hightmp.samuelcolvin.workers.dev/create/
+  https://hightmp.samuelcolvin.workers.dev/create/ \
+  -H 'Authorisation:{generated-key-from-above}'
 ```
 This should create a site and return a JSON object with details required
-to upload files to the site.
+to upload files to the site:
 
-You can then upload a file, again using `curl` 
-(here `RESPONSE_JSON` refers to the response from the above requset):
+```json
+{
+  "message": "New site created successfully",
+  "secret_key": "... secret upload key ...",
+  "site_creation": "2021-03-13T18:36:44.419Z",
+  "site_expiration": "2021-04-12T18:36:44.419Z",
+  "sites_created_24h": 0,
+  "upload_expiration": "2021-03-13T19:36:44.419Z",
+  "url": "https://hightmp.samuelcolvin.workers.dev/... 20 char random string .../"
+}
+```
+
+You can then upload a file, again using `curl` (here `RESPONSE_JSON` refers to the response above):
 
 ```bash
 curl -X POST \
-   -H 'Authorisation:{RESPONSE_JSON.secret_key}' \
-   -H 'Content-Type:text/html' \
   '{RESPONSE_JSON.url}path-to-upload.html' \
-   --data-binary @file-to-upload.html
+  -H 'Authorisation:{RESPONSE_JSON.secret_key}' \
+  -H 'Content-Type:text/html' \
+  --data-binary @file-to-upload.html
 ```
 
 ## Features
@@ -97,7 +108,7 @@ inspecting the `Referer` header and redirecting to the intended page.
 * 🎯 _hightmp_ catches this request, inspects the `Referer` headers and spots `/3y4x0n6a200u2n6m316j/foobar/`
 * 🤔 _hightmp_ calculates that the request should be to `https://hightmp.samuelcolvin.workers.dev/3y4x0n6a200u2n6m316j/another/`
 * ↪️ _hightmp_ returns a `307` redirect to that page
-* ✔️ the browser loads the correct page
+* 🏗️ the browser loads that page
 * 😊 user is happy
 
 ## CLI usage
