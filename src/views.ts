@@ -17,7 +17,7 @@ import github_svg from '!raw-loader!./index/github.svg'
 import moon_svg from '!raw-loader!./index/moon.svg'
 import index_html from '!raw-loader!./index/index.html'
 
-declare const HIGH_TMP: KVNamespace
+declare const STORAGE: KVNamespace
 
 const index_html_final = index_html
   .replace('{readme}', readme)
@@ -35,13 +35,13 @@ async function get_file(request: Request, public_key: string, path: string): Pro
     return json_response(await site_summary(public_key))
   }
 
-  let v = await HIGH_TMP.getWithMetadata(`site:${public_key}:${path}`, 'stream')
+  let v = await STORAGE.getWithMetadata(`site:${public_key}:${path}`, 'stream')
 
   if (!v.value && path.endsWith('/')) {
     const index_options = get_index_options(public_key, path)
     let next
     while (!v.value && !(next = index_options.next()).done) {
-      v = await HIGH_TMP.getWithMetadata(next.value as string, 'stream')
+      v = await STORAGE.getWithMetadata(next.value as string, 'stream')
     }
 
     if (!v.value && path == '/') {
@@ -55,9 +55,9 @@ async function get_file(request: Request, public_key: string, path: string): Pro
 
   if (!v.value) {
     // check if we have a 404.html or 404.txt file, if so use that and change the status, else throw a generic 404
-    v = await HIGH_TMP.getWithMetadata(`site:${public_key}:/404.html`, 'stream')
+    v = await STORAGE.getWithMetadata(`site:${public_key}:/404.html`, 'stream')
     if (!v.value) {
-      v = await HIGH_TMP.getWithMetadata(`site:${public_key}:/404.txt`, 'stream')
+      v = await STORAGE.getWithMetadata(`site:${public_key}:/404.txt`, 'stream')
     }
     if (!v.value) {
       throw new HttpError(404, `File "${path}" not found in site "${public_key}"`)
@@ -81,7 +81,7 @@ async function post_file(request: Request, public_key: string, path: string): Pr
 
   const total_site_size = await new_file_check(public_key, size)
 
-  await HIGH_TMP.put(`site:${public_key}:${path}`, blob.stream(), {
+  await STORAGE.put(`site:${public_key}:${path}`, blob.stream(), {
     expiration: Math.round((creation_ms + SITE_TTL) / 1000),
     metadata: {content_type, size},
   })
@@ -117,11 +117,17 @@ export const views: View[] = [
       const auth_key = await check_create_auth(request)
       const public_key = create_random_string(PUBLIC_KEY_LENGTH)
 
-      if (await HIGH_TMP.get(`site:${public_key}:${INFO_FILE_NAME}`)) {
+      const user_agent = request.headers.get('user-agent')
+      if (!user_agent) {
+        throw new HttpError(400, 'No "User-Agent" header found')
+      }
+      const ip_address = request.headers.get('cf-connecting-ip') as string
+
+      if (await STORAGE.get(`site:${public_key}:${INFO_FILE_NAME}`)) {
         // shouldn't happen
         throw new HttpError(409, 'Site with this public key already exists')
       }
-      const sites_created_24h = await create_site_check(public_key, auth_key)
+      const sites_created_24h = await create_site_check(public_key, auth_key, user_agent, ip_address)
       console.log(
         `creating new site public_key=${public_key} sites_created_24h=${sites_created_24h} auth_key=${auth_key}`,
       )
@@ -140,7 +146,7 @@ export const views: View[] = [
         site_expiration: site_expiration_date.toISOString(),
       }
       const info_json = JSON.stringify(site_info, null, 2)
-      await HIGH_TMP.put(`site:${public_key}:${INFO_FILE_NAME}`, info_json, {
+      await STORAGE.put(`site:${public_key}:${INFO_FILE_NAME}`, info_json, {
         expiration: Math.round(site_expiration_date.getTime() / 1000),
         metadata: {content_type: 'application/json', size: info_json.length},
       })
@@ -188,7 +194,7 @@ export function smart_referrer_redirect(request: Request, url: URL): string | un
   }
   const referrer_url = new URL(referrer)
   if (referrer_url.origin != url.origin) {
-    // referrer is not hightmp
+    // referrer is not smokeshow
     return
   }
   const match = clean_path(referrer_url).match(site_path_regex)
