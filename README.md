@@ -1,6 +1,6 @@
-# hightmp
+# smokeshow
 
-[![CI](https://github.com/samuelcolvin/hightmp/workflows/CI/badge.svg?event=push)](https://github.com/samuelcolvin/hightmp/actions?query=event%3Apush+branch%3Amain+workflow%3ACI)
+[![CI](https://github.com/samuelcolvin/smokeshow/workflows/CI/badge.svg?event=push)](https://github.com/samuelcolvin/smokeshow/actions?query=event%3Apush+branch%3Amain+workflow%3ACI)
 
 Deploy ephemeral websites.
 
@@ -9,13 +9,13 @@ If you need to do any of the following:
 * 🙈 view the HTML version of coverage reports
 * 👀 create a quick website to show someone something
 
-_hightmp_ is here to help, it lets you use HTTP to upload files to create a static website.
+_smokeshow_ is here to help, it lets you use HTTP to upload files to create a static website.
 30 days after that site is created, it vanishes.
 
 A few advantages:
 * 💸 It's free
 * 🔑 You don't need to sign up, just create a key using the script below
-* 💨 It's super fast around the world, _hightmp_ uses CloudFlare's 280+ edge locations to store files meaning
+* 💨 It's super fast around the world, _smokeshow_ uses CloudFlare's 280+ edge locations to store files meaning
   they're next to your users
 
 ## Usage
@@ -50,7 +50,7 @@ Once you have your key, you can create a site using the following `curl` command
 
 ```bash
 curl -X POST \
-  https://hightmp.samuelcolvin.workers.dev/create/ \
+  https://smokeshow.helpmanual.io/create/ \
   -H 'Authorisation:{generated-key-from-above}'
 ```
 This should create a site and return a JSON object with details required
@@ -64,7 +64,7 @@ to upload files to the site:
   "site_expiration": "2021-04-12T18:36:44.419Z",
   "sites_created_24h": 0,
   "upload_expiration": "2021-03-13T19:36:44.419Z",
-  "url": "https://hightmp.samuelcolvin.workers.dev/... 20 char random string .../"
+  "url": "https://smokeshow.helpmanual.io/... 20 char random string .../"
 }
 ```
 
@@ -80,12 +80,12 @@ curl -X POST \
 
 ## Features
 
-_hightmp_ doesn't have too many special features, most things are designed to be
+_smokeshow_ doesn't have too many special features, most things are designed to be
 boringly predictable, But a few things warrant explanation.
 
 ### Content Type
 
-The `Content-Type` header in responses is not inferred by _hightmp_, instead it's taken from the same
+The `Content-Type` header in responses is not inferred by _smokeshow_, instead it's taken from the same
 header in the upload request.
 
 ### Path Matches
@@ -97,17 +97,17 @@ The following path equivalence is supported:
 
 ### Referrer Redirects
 
-_hightmp_ deploys sites at a random subdirectory (e.g. `/3y4x0n6a200u2n6m316j/`) this works fine, but could occasionally
+_smokeshow_ deploys sites at a random subdirectory (e.g. `/3y4x0n6a200u2n6m316j/`) this works fine, but could occasionally
 lead to problems with sites that assume they will be deployed at root (`/`), we work round that problem by
 inspecting the `Referer` header and redirecting to the intended page.
 
 **Example** of how this works:
-* 🔗 The page `https://hightmp.samuelcolvin.workers.dev/3y4x0n6a200u2n6m316j/foobar/` has a link to `/another/` \
-  which of course we want to resolve to `https://hightmp.samuelcolvin.workers.dev/3y4x0n6a200u2n6m316j/another/`
-* 👆 When a user clicks on the link, the browser loads `https://hightmp.samuelcolvin.workers.dev/another/`
-* 🎯 _hightmp_ catches this request, inspects the `Referer` headers and spots `/3y4x0n6a200u2n6m316j/foobar/`
-* 🤔 _hightmp_ calculates that the request should be to `https://hightmp.samuelcolvin.workers.dev/3y4x0n6a200u2n6m316j/another/`
-* ↪️ _hightmp_ returns a `307` redirect to that page
+* 🔗 The page `https://smokeshow.helpmanual.io/3y4x0n6a200u2n6m316j/foobar/` has a link to `/another/` \
+  which of course we want to resolve to `https://smokeshow.helpmanual.io/3y4x0n6a200u2n6m316j/another/`
+* 👆 When a user clicks on the link, the browser loads `https://smokeshow.helpmanual.io/another/`
+* 🎯 _smokeshow_ catches this request, inspects the `Referer` headers and spots `/3y4x0n6a200u2n6m316j/foobar/`
+* 🤔 _smokeshow_ calculates that the request should be to `https://smokeshow.helpmanual.io/3y4x0n6a200u2n6m316j/another/`
+* ↪️ _smokeshow_ returns a `307` redirect to that page
 * 🏗️ the browser loads that page
 * 😊 user is happy
 
@@ -117,11 +117,11 @@ TODO...
 
 ## Limits
 
-The following limits apply to usage of _hightmp_:
+The following limits apply to usage of _smokeshow_:
 * **50**: maximum number of sites you can create a day with a given key
 * **30 MB**: maximum site size
 * **25 MB**: maximum size of a file - this is a limit of [Cloudflare's KV store](https://developers.cloudflare.com/workers/platform/limits#kv-limits)
 
-**Notice:** _hightmp_ is currently free for anyone to use, but if it starts to cost me a significant amount, I
-might reduce the limits, or stop it being free. Please [watch the github repo](https://github.com/samuelcolvin/hightmp)
+**Notice:** _smokeshow_ is currently free for anyone to use, but if it starts to cost me a significant amount, I
+might reduce the limits, or stop it being free. Please [watch the github repo](https://github.com/samuelcolvin/smokeshow)
 to get notifications of changes to the service if you're using it regularly.

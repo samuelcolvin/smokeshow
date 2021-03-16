@@ -1,5 +1,5 @@
 export const AUTH_HASH_THRESHOLD = 2 ** 233
-export const INFO_FILE_NAME = '/.hightmp.json'
+export const INFO_FILE_NAME = '/.smokeshow.json'
 export const PUBLIC_KEY_LENGTH = 20
 export const SITE_TTL = 30 * 24 * 3600 * 1000
 export const UPLOAD_TTL = 3600 * 1000

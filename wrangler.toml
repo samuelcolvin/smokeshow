@@ -1,14 +1,19 @@
-name = "hightmp"
+name = "smokeshow"
 type = "webpack"
 account_id = "d6252a570c309c113744c9e11317e271"
-workers_dev = true
-route = ""
-zone_id = ""
+route = "smokeshow.helpmanual.io/*"
+zone_id = "653b9d1efbeea2a2602b73ac5ea8d388"  # helpmanual.io
 webpack_config = "webpack.config.js"
 kv_namespaces = [
-	{binding="HIGH_TMP", preview_id="01b0830ca2964ab295de803b44b9b26c", id="f966a19796ee425ba126393a83111beb"}
+	{binding="STORAGE", id="74015bfa1d2443dfaaba49276b0d4310"}
 ]
 
-[vars]
+[env.staging]
+name = "smokeshow-staging"
+workers_dev = true
+route = ""
+kv_namespaces = [
+	{binding = "STORAGE", id = "b4ba1fc5fb614af7be37ad63a42c218d", preview_id="6b60f496af50470784eaf3a118032148"}
+]
+[env.staging.vars]
 DEBUG = "TRUE"
-SENTRY_DSN = "https://54654d4d8c1d4d1cac68d931a4ae7d8c@o168119.ingest.sentry.io/5661678"
