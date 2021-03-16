@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/samuelcolvin/hightmp/workflows/CI/badge.svg?event=push)](https://github.com/samuelcolvin/hightmp/actions?query=event%3Apush+branch%3Amain+workflow%3ACI)
 
-Deploy temporary websites via HTTP.
+Deploy ephemeral websites.
 
 If you need to do any of the following:
 * 🚀 preview a site before launch

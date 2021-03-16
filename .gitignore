@@ -1,6 +1,12 @@
-/dist/
+dist/
 node_modules/
 worker
 /.idea/
-/env/
+env/
 /site/
+/cli/build/
+*.lock
+*.py[cod]
+*.egg-info/
+.cache/
+.mypy_cache/
