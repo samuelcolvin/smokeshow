@@ -27,6 +27,10 @@ setup(
     python_requires='>=3.7',
     packages=['smokeshow'],
     zip_safe=False,
+    entry_points="""
+        [console_scripts]
+        smokeshow=smokeshow.main:cli
+    """,
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Programming Language :: Python',

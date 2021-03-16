@@ -46,7 +46,7 @@ async function get_file(request: Request, public_key: string, path: string): Pro
 
     if (!v.value && path == '/') {
       return json_response({
-        message: `The site (${public_key} has no index file, hence this summary response`,
+        message: `The site "${public_key}" has no index file, hence this summary response`,
         summary: await site_summary(public_key),
       })
     }

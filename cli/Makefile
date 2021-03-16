@@ -4,9 +4,8 @@ black = black -S -l 120 --target-version py37 smokeshow tests
 
 .PHONY: install
 install:
-	python -m pip install -U setuptools pip wheel
-	pip install -U -r tests/requirements-testing.txt
-	pip install -U -r tests/requirements-linting.txt
+	python3 -m pip install -U setuptools pip wheel
+	pip install -U -r tests/requirements.txt
 	pip install -e .
 
 .PHONY: format
