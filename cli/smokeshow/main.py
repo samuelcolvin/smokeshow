@@ -19,6 +19,10 @@ def cli():
 
 
 def _cli() -> Optional[str]:
+    if len(sys.argv) != 2:
+        return 'Usage: smokeshow directory-to-upload/'
+    path = sys.argv[1]
+
     root_url = os.getenv('SMOKESHOW_ROOT_URL', 'https://smokeshow.helpmanual.io')
     if root_url.endswith('/'):
         return '"SMOKESHOW_ROOT_URL" environment variable should not end with a slash'
@@ -27,10 +31,6 @@ def _cli() -> Optional[str]:
         auth_key = os.environ['SMOKESHOW_AUTH_KEY']
     except KeyError:
         return '"SMOKESHOW_AUTH_KEY" environment variable not set'
-
-    if len(sys.argv) != 2:
-        return 'Usage: smokeshow directory-to-upload/'
-    path = sys.argv[1]
 
     try:
         asyncio.run(upload(path, root_url, auth_key))
