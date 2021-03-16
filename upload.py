@@ -10,7 +10,7 @@ from typing import Optional
 from httpx import AsyncClient
 
 
-create_url = 'https://smokeshow.samuelcolvin.workers.dev/create/'
+create_url = 'https://smokeshow.helpmanual.io/create/'
 # create_url = 'http://localhost:8787/create/'
 auth_header = os.environ['SMOKESHOW_AUTH']
 
@@ -47,7 +47,7 @@ async def main(path: str) -> Optional[str]:
         obj = r.json()
         upload_root = obj['url']
         assert upload_root.endswith('/'), upload_root
-        # upload_root = upload_root.replace('https://smokeshow.samuelcolvin.workers.dev', 'http://localhost:8787')
+        # upload_root = upload_root.replace('https://smokeshow.helpmanual.io', 'http://localhost:8787')
         secret_key = obj['secret_key']
 
         async def upload_file(file_path: Path):

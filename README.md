@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/samuelcolvin/smokeshow/workflows/CI/badge.svg?event=push)](https://github.com/samuelcolvin/smokeshow/actions?query=event%3Apush+branch%3Amain+workflow%3ACI)
 
-Deploy temporary websites via HTTP.
+Deploy ephemeral websites via HTTP.
 
 If you need to do any of the following:
 * 🚀 preview a site before launch
@@ -50,7 +50,7 @@ Once you have your key, you can create a site using the following `curl` command
 
 ```bash
 curl -X POST \
-  https://smokeshow.samuelcolvin.workers.dev/create/ \
+  https://smokeshow.helpmanual.io/create/ \
   -H 'Authorisation:{generated-key-from-above}'
 ```
 This should create a site and return a JSON object with details required
@@ -64,7 +64,7 @@ to upload files to the site:
   "site_expiration": "2021-04-12T18:36:44.419Z",
   "sites_created_24h": 0,
   "upload_expiration": "2021-03-13T19:36:44.419Z",
-  "url": "https://smokeshow.samuelcolvin.workers.dev/... 20 char random string .../"
+  "url": "https://smokeshow.helpmanual.io/... 20 char random string .../"
 }
 ```
 
@@ -102,11 +102,11 @@ lead to problems with sites that assume they will be deployed at root (`/`), we 
 inspecting the `Referer` header and redirecting to the intended page.
 
 **Example** of how this works:
-* 🔗 The page `https://smokeshow.samuelcolvin.workers.dev/3y4x0n6a200u2n6m316j/foobar/` has a link to `/another/` \
-  which of course we want to resolve to `https://smokeshow.samuelcolvin.workers.dev/3y4x0n6a200u2n6m316j/another/`
-* 👆 When a user clicks on the link, the browser loads `https://smokeshow.samuelcolvin.workers.dev/another/`
+* 🔗 The page `https://smokeshow.helpmanual.io/3y4x0n6a200u2n6m316j/foobar/` has a link to `/another/` \
+  which of course we want to resolve to `https://smokeshow.helpmanual.io/3y4x0n6a200u2n6m316j/another/`
+* 👆 When a user clicks on the link, the browser loads `https://smokeshow.helpmanual.io/another/`
 * 🎯 _smokeshow_ catches this request, inspects the `Referer` headers and spots `/3y4x0n6a200u2n6m316j/foobar/`
-* 🤔 _smokeshow_ calculates that the request should be to `https://smokeshow.samuelcolvin.workers.dev/3y4x0n6a200u2n6m316j/another/`
+* 🤔 _smokeshow_ calculates that the request should be to `https://smokeshow.helpmanual.io/3y4x0n6a200u2n6m316j/another/`
 * ↪️ _smokeshow_ returns a `307` redirect to that page
 * 🏗️ the browser loads that page
 * 😊 user is happy
