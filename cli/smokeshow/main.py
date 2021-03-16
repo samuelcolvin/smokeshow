@@ -8,7 +8,11 @@ from typing import Optional, Union
 
 from httpx import AsyncClient
 
+from .version import VERSION
+
 __all__ = 'cli', 'upload'
+
+USER_AGENT = f'smokeshow-cli-v{VERSION}'
 
 
 def cli():
@@ -44,7 +48,7 @@ async def upload(path: str, root_url: str, auth_key: str) -> str:
         raise ValueError(f'Error, {root_path} is not a directory or file')
 
     async with AsyncClient(timeout=30) as client:
-        r = await client.post(root_url + '/create/', headers={'Authorisation': auth_key})
+        r = await client.post(root_url + '/create/', headers={'Authorisation': auth_key, 'User-Agent': USER_AGENT})
         if r.status_code != 200:
             raise ValueError(f'Error creating ephemeral site {r.status_code}, response:\n{r.text}')
 
@@ -56,7 +60,7 @@ async def upload(path: str, root_url: str, auth_key: str) -> str:
 
         async def upload_file(file_path: Path, rel_path: Union[Path, str]):
             url_path = str(rel_path)
-            headers = {'Authorisation': secret_key}
+            headers = {'Authorisation': secret_key, 'User-Agent': USER_AGENT}
             ct = get_content_type(url_path)
             if ct:
                 headers['Content-Type'] = ct
@@ -75,6 +79,7 @@ async def upload(path: str, root_url: str, auth_key: str) -> str:
             total_size = max(await asyncio.gather(*coros))
         else:
             # root_path is a file
+            print(f'Site created with root {upload_root}, uploading 1 file...')
             total_size = await upload_file(root_path, root_path.name)
 
         print(f'upload complete ✓ site size {fmt_size(total_size)}')
