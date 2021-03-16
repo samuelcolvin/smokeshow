@@ -1,7 +1,7 @@
 import {HttpError} from './utils'
 import {AUTH_HASH_THRESHOLD, UPLOAD_TTL} from './constants'
 
-declare const HIGH_TMP: KVNamespace
+declare const STORAGE: KVNamespace
 
 export async function check_create_auth(request: Request): Promise<string> {
   const auth_key = get_auth_header(request)
@@ -83,14 +83,14 @@ const hmac_algo: HmacImportParams = {name: 'HMAC', hash: {name: 'SHA-512'}}
 const hmac_key_usage: KeyUsage[] = ['sign', 'verify']
 
 async function get_hmac_secret_key(): Promise<CryptoKey> {
-  const raw_key = await HIGH_TMP.get('hmac_secret_key', 'arrayBuffer')
+  const raw_key = await STORAGE.get('hmac_secret_key', 'arrayBuffer')
   if (raw_key) {
     return await crypto.subtle.importKey('raw', raw_key, hmac_algo, true, hmac_key_usage)
   } else {
     const secret_key = (await crypto.subtle.generateKey(hmac_algo, true, hmac_key_usage)) as CryptoKey
 
     const new_raw_key = await crypto.subtle.exportKey('raw', secret_key)
-    await HIGH_TMP.put('hmac_secret_key', new_raw_key)
+    await STORAGE.put('hmac_secret_key', new_raw_key)
     return secret_key
   }
 }

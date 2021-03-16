@@ -1,7 +1,7 @@
 import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH} from './constants'
 
 declare const DEBUG: string | undefined
-declare const HIGH_TMP: KVNamespace
+declare const STORAGE: KVNamespace
 
 export const debug = typeof DEBUG !== 'undefined' && DEBUG === 'TRUE'
 
@@ -22,7 +22,7 @@ export function json_response(obj: Record<string, any>): Response {
 export async function cached_proxy(url: string, content_type: string): Promise<Response> {
   const cache_key = `file:${url}`
 
-  const cache_value = await HIGH_TMP.getWithMetadata(cache_key, 'stream')
+  const cache_value = await STORAGE.getWithMetadata(cache_key, 'stream')
   if (cache_value.value) {
     return response_from_cache(cache_value, 3600)
   }
@@ -33,7 +33,7 @@ export async function cached_proxy(url: string, content_type: string): Promise<R
   }
   const blob = await r.blob()
   const body = await blob.arrayBuffer()
-  await HIGH_TMP.put(cache_key, body, {expirationTtl: 3600 * 24 * 30, metadata: {content_type}})
+  await STORAGE.put(cache_key, body, {expirationTtl: 3600 * 24 * 30, metadata: {content_type}})
   return simple_response(body, content_type, 3600)
 }
 
@@ -114,18 +114,18 @@ interface KvListItem {
 
 export async function list_all(prefix: string): Promise<KvListItem[]> {
   const items: KvListItem[] = []
-  let value = await HIGH_TMP.list({prefix: prefix})
+  let value = await STORAGE.list({prefix: prefix})
   while (true) {
     items.push(...(value.keys as KvListItem[]))
     if (value.list_complete) {
       return items
     }
-    value = await HIGH_TMP.list({prefix: prefix, cursor: value.cursor})
+    value = await STORAGE.list({prefix: prefix, cursor: value.cursor})
   }
 }
 
 export async function site_summary(public_key: string): Promise<Record<string, any>> {
-  const raw = await HIGH_TMP.get(`site:${public_key}:${INFO_FILE_NAME}`, 'json')
+  const raw = await STORAGE.get(`site:${public_key}:${INFO_FILE_NAME}`, 'json')
   const obj = raw as Record<string, any>
   const files = await list_all(`site:${public_key}:`)
   obj.files = files.map(k => k.name.substr(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)

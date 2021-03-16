@@ -1,5 +1,5 @@
 {
-  "name": "hightmp",
+  "name": "smokeshow",
   "version": "1.0.0",
   "description": "Temporary site deployment using cloudflare workers",
   "main": "index.js",
