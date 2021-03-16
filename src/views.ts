@@ -117,11 +117,17 @@ export const views: View[] = [
       const auth_key = await check_create_auth(request)
       const public_key = create_random_string(PUBLIC_KEY_LENGTH)
 
+      const user_agent = request.headers.get('user-agent')
+      if (!user_agent) {
+        throw new HttpError(400, 'No "User-Agent" header found')
+      }
+      const ip_address = request.headers.get('cf-connecting-ip') as string
+
       if (await STORAGE.get(`site:${public_key}:${INFO_FILE_NAME}`)) {
         // shouldn't happen
         throw new HttpError(409, 'Site with this public key already exists')
       }
-      const sites_created_24h = await create_site_check(public_key, auth_key)
+      const sites_created_24h = await create_site_check(public_key, auth_key, user_agent, ip_address)
       console.log(
         `creating new site public_key=${public_key} sites_created_24h=${sites_created_24h} auth_key=${auth_key}`,
       )
