@@ -45,14 +45,16 @@ jobs:
         with:
           python-version: '3.8'
 
-      - run: cd cli
       - run: make install
+        working-directory: cli
 
       - run: make lint
+        working-directory: cli
       - run: make mypy
+        working-directory: cli
 
   test-cli:
-    name: test py${{ matrix.python-version }} on ${{ matrix.os }}
+    name: test CLI py${{ matrix.python-version }} on ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -73,14 +75,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - run: cd cli
       - run: make install
+        working-directory: cli
       - run: pip freeze
 
       - name: test
         run: make test
+        working-directory: cli
 
       - run: coverage xml
+        working-directory: cli
 
       - uses: codecov/codecov-action@v1.2.1
         with:
