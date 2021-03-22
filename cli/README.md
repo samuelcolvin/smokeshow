@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/samuelcolvin/hightmp/workflows/CI/badge.svg?event=push)](https://github.com/samuelcolvin/hightmp/actions?query=event%3Apush+branch%3Amain+workflow%3ACI)
 
-CLI to deploy ephemeral websites, see [smokeshow.helpmanual.io](https://smokeshow.helpmanual.io).
+CLI to deploy ephemeral websites, see [smokeshow.helpmanual.io](https://smokeshow.helpmanual.io) for more information.
 
 ## Installation
 
@@ -12,7 +12,7 @@ pip install smokeshow
 
 ## Usage
 
-Get help on usage:
+To get help on usage, run:
 
 ```bash
 smokeshow --help

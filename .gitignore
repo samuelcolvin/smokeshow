@@ -6,6 +6,7 @@ node_modules/
 env/
 /site/
 /cli/build/
+/cli/.coverage
 *.lock
 *.py[cod]
 *.egg-info/

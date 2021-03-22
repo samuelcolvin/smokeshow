@@ -1,6 +1,8 @@
 # smokeshow
 
 [![CI](https://github.com/samuelcolvin/smokeshow/workflows/CI/badge.svg?event=push)](https://github.com/samuelcolvin/smokeshow/actions?query=event%3Apush+branch%3Amain+workflow%3ACI)
+[![pypi](https://img.shields.io/pypi/v/smokeshow.svg)](https://pypi.python.org/pypi/smokeshow)
+[![license](https://img.shields.io/github/license/samuelcolvin/smokeshow.svg)](https://github.com/samuelcolvin/smokeshow/blob/master/LICENSE)
 
 Deploy ephemeral websites via HTTP or [the CLI](#cli-usage).
 
@@ -161,10 +163,6 @@ inspecting the `Referer` header and redirecting to the intended page.
 * ↪️ _smokeshow_ returns a `307` redirect to that page
 * 🏗️ the browser loads that page
 * 😊 user is happy
-
-## CLI usage
-
-TODO...
 
 ## Limits
 

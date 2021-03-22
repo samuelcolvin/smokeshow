@@ -9,7 +9,20 @@ on:
   pull_request: {}
 
 jobs:
-  test:
+  lint-server:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+      - run: yarn
+      - run: yarn lint
+
+  test-server:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,15 +35,54 @@ jobs:
     - run: yarn
 #    - run: yarn test --coverage
 
-  lint:
+  lint-cli:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - uses: actions/setup-node@v1
-      with:
-        node-version: '14.x'
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
 
-    - run: yarn
-    - run: yarn lint
+      - run: cd cli
+      - run: make install
+
+      - run: make lint
+      - run: make mypy
+
+  test-cli:
+    name: test py${{ matrix.python-version }} on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, windows, macos]
+        python-version: ['3.7', '3.8', '3.9']
+
+    runs-on: ${{ matrix.os }}-latest
+
+    env:
+      PYTHON: ${{ matrix.python-version }}
+      OS: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: set up python
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - run: cd cli
+      - run: make install
+      - run: pip freeze
+
+      - name: test
+        run: make test
+
+      - run: coverage xml
+
+      - uses: codecov/codecov-action@v1.2.1
+        with:
+          file: ./coverage.xml
+          env_vars: PYTHON,OS
