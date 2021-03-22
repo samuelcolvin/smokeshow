@@ -1,4 +1,4 @@
-export const AUTH_HASH_THRESHOLD = 2 ** 233
+export const AUTH_HASH_THRESHOLD = 2 ** 234
 export const INFO_FILE_NAME = '/.smokeshow.json'
 export const PUBLIC_KEY_LENGTH = 20
 export const SITE_TTL = 30 * 24 * 3600 * 1000

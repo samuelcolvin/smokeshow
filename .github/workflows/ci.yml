@@ -83,10 +83,9 @@ jobs:
         run: make test
         working-directory: cli
 
-      - run: coverage xml
+      - run: coverage html
         working-directory: cli
 
-      - uses: codecov/codecov-action@v1.2.1
-        with:
-          file: ./coverage.xml
-          env_vars: PYTHON,OS
+        # let's dog food!
+      - run: smokeshow upload htmlcov
+        working-directory: cli

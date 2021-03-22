@@ -12,7 +12,7 @@ def test_help():
 
 
 def test_generate_key(mocker):
-    mocker.patch('smokeshow.main.KEY_HASH_THRESHOLD', 2 ** 245)
+    mocker.patch('smokeshow.main.KEY_HASH_THRESHOLD', 2 ** 235)
 
     result = runner.invoke(cli, ['generate-key'])
     assert result.exit_code == 0

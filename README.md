@@ -34,7 +34,7 @@ your own instance to cloudflare workers, you can.
 
 Uploading a site to _smokeshow_ requires three steps:
 
-1. Create an upload key where a numeric representation of its `sha-256` hash is less than `2 ^ 233`. 
+1. Create an upload key where a numeric representation of its `sha-256` hash is less than `2 ^ 234`. 
    In other words; a simple proof of work. This key can then be used to create multiple sites.
 2. Create a new site.
 3. Upload one or more files to that site.
@@ -83,7 +83,7 @@ You can create an upload key using the following python3.6+ script:
 import base64, hashlib, os
 
 print('Searching for a key with valid hash. Hold tight, this might take a minute...')
-threshold = 2 ** 233
+threshold = 2 ** 234
 attempts = 0
 while True:
     attempts += 1

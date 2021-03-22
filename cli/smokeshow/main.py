@@ -16,7 +16,8 @@ from .version import VERSION
 __all__ = 'cli', 'upload'
 
 USER_AGENT = f'smokeshow-cli-v{VERSION}'
-KEY_HASH_THRESHOLD = 2 ** 233
+KEY_HASH_THRESHOLD_POW = 234
+KEY_HASH_THRESHOLD = 2 ** KEY_HASH_THRESHOLD_POW
 ROOT_URL = 'https://smokeshow.helpmanual.io'
 cli = Typer(help='smokeshow CLI, see https://smokeshow.helpmanual.io for more information.')
 
@@ -25,7 +26,7 @@ cli = Typer(help='smokeshow CLI, see https://smokeshow.helpmanual.io for more in
 def generate_key() -> str:
     print(
         'Searching for a key with valid hash '
-        '(the numeric representation of its sha-256 hash needs to be less than 2^233). '
+        f'(the numeric representation of its sha-256 hash needs to be less than 2^{KEY_HASH_THRESHOLD_POW}). '
         'Hold tight, this might take a minute...'
     )
     attempts = 0
@@ -41,10 +42,10 @@ def generate_key() -> str:
             return key
 
 
-@cli.command(name='upload', help='Upload one or more files to great a new site')
+@cli.command(name='upload', help='Upload one or more files to create a new site')
 def cli_upload(
     path: Path = Argument(..., exists=True, dir_okay=True, file_okay=True, readable=True, resolve_path=True),
-    auth_key: str = Option(..., envvar='SMOKESHOW_AUTH_KEY'),
+    auth_key: Optional[str] = Option(None, envvar='SMOKESHOW_AUTH_KEY'),
     root_url: str = Option(ROOT_URL, envvar='SMOKESHOW_ROOT_URL'),
 ) -> None:
     try:
@@ -54,10 +55,15 @@ def cli_upload(
         raise Exit(1)
 
 
-async def upload(root_path: Path, auth_key: str, *, root_url: str = ROOT_URL) -> str:
+async def upload(root_path: Path, auth_key: Optional[str], *, root_url: str = ROOT_URL) -> str:
+    if auth_key is None:
+        print('No auth key provided, generating now...\n')
+        auth_key_use = generate_key()
+    else:
+        auth_key_use = auth_key
 
     async with AsyncClient(timeout=30) as client:
-        r = await client.post(root_url + '/create/', headers={'Authorisation': auth_key, 'User-Agent': USER_AGENT})
+        r = await client.post(root_url + '/create/', headers={'Authorisation': auth_key_use, 'User-Agent': USER_AGENT})
         if r.status_code != 200:
             raise ValueError(f'Error creating ephemeral site {r.status_code}, response:\n{r.text}')
 
