@@ -55,5 +55,6 @@ setup(
     ],
     install_requires=[
         'httpx>=0.17',
+        'typer>=0.3.2',
     ],
 )

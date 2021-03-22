@@ -1,4 +1,6 @@
 import asyncio
+import base64
+import hashlib
 import os
 import re
 import sys
@@ -7,45 +9,53 @@ from pathlib import Path
 from typing import Optional, Union
 
 from httpx import AsyncClient
+from typer import Argument, Exit, Option, Typer
 
 from .version import VERSION
 
 __all__ = 'cli', 'upload'
 
 USER_AGENT = f'smokeshow-cli-v{VERSION}'
+KEY_HASH_THRESHOLD = 2 ** 233
+ROOT_URL = 'https://smokeshow.helpmanual.io'
+cli = Typer()
 
 
-def cli():
-    error = _cli()
-    if error:
-        print(error, file=sys.stderr)
-        sys.exit(1)
+@cli.command(help='Generate a new upload key')
+def generate_key():
+    print(
+        'Searching for a key with valid hash '
+        '(the numeric representation of its sha-256 hash needs to be less than 2^233). '
+        'Hold tight, this might take a minute...'
+    )
+    attempts = 0
+    while True:
+        attempts += 1
+        seed = os.urandom(50)
+        h = int.from_bytes(hashlib.sha256(seed).digest(), 'big')
+        if attempts % 100_000 == 0:
+            print('.', end='', flush=True)
+        if h < KEY_HASH_THRESHOLD:
+            key = base64.b64encode(seed).decode().rstrip('=')
+            print(f"\nSuccess! Key found after {attempts:,} attempts:\n\n    SMOKESHOW_AUTH_KEY='{key}'\n")
+            break
 
 
-def _cli() -> Optional[str]:
-    if len(sys.argv) != 2:
-        return 'Usage: smokeshow directory-to-upload/'
-    path = sys.argv[1]
-
-    root_url = os.getenv('SMOKESHOW_ROOT_URL', 'https://smokeshow.helpmanual.io')
-    if root_url.endswith('/'):
-        return '"SMOKESHOW_ROOT_URL" environment variable should not end with a slash'
-
+@cli.command(help='Upload one or more files to great a new site')
+def upload(
+    path: Path = Argument(..., exists=True, dir_okay=True, file_okay=True, readable=True, resolve_path=True),
+    auth_key: str = Option(..., envvar='SMOKESHOW_AUTH_KEY'),
+    root_url: str = Option(ROOT_URL, envvar='SMOKESHOW_ROOT_URL'),
+) -> Optional[str]:
     try:
-        auth_key = os.environ['SMOKESHOW_AUTH_KEY']
-    except KeyError:
-        return '"SMOKESHOW_AUTH_KEY" environment variable not set'
-
-    try:
-        asyncio.run(upload(path, root_url, auth_key))
+        asyncio.run(async_upload(path, auth_key, root_url=root_url))
     except ValueError as e:
-        return str(e)
+        print(e, file=sys.stderr)
+        raise Exit(1)
 
 
-async def upload(path: str, root_url: str, auth_key: str) -> str:
+async def async_upload(path: str, auth_key: str, *, root_url: str = ROOT_URL) -> str:
     root_path = Path(path).resolve()
-    if not root_path.is_dir() and not root_path.is_file():
-        raise ValueError(f'Error, {root_path} is not a directory or file')
 
     async with AsyncClient(timeout=30) as client:
         r = await client.post(root_url + '/create/', headers={'Authorisation': auth_key, 'User-Agent': USER_AGENT})
@@ -53,10 +63,13 @@ async def upload(path: str, root_url: str, auth_key: str) -> str:
             raise ValueError(f'Error creating ephemeral site {r.status_code}, response:\n{r.text}')
 
         obj = r.json()
-        upload_root = obj['url']
+        secret_key: str = obj['secret_key']
+        upload_root: str = obj['url']
         assert upload_root.endswith('/'), upload_root
-        # upload_root = upload_root.replace('https://smokeshow.helpmanual.io', 'http://localhost:8787')
-        secret_key = obj['secret_key']
+
+        # useful when uploading to a dev endpoint where the worker returns the production host in request.url
+        if not upload_root.startswith(root_url):
+            upload_root = re.sub('https?://[^/]+', root_url)
 
         async def upload_file(file_path: Path, rel_path: Union[Path, str]):
             url_path = str(rel_path)

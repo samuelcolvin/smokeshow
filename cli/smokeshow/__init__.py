@@ -1,4 +1,4 @@
-from .main import cli, upload
+from .main import upload
 from .version import VERSION
 
-__all__ = 'cli', 'upload', 'VERSION'
+__all__ = 'upload', 'VERSION'

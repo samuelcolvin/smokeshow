@@ -2,30 +2,80 @@
 
 [![CI](https://github.com/samuelcolvin/smokeshow/workflows/CI/badge.svg?event=push)](https://github.com/samuelcolvin/smokeshow/actions?query=event%3Apush+branch%3Amain+workflow%3ACI)
 
-Deploy ephemeral websites.
+Deploy ephemeral websites via HTTP or [the CLI](#cli-usage).
 
 If you need to do any of the following:
 * 🚀 preview a site before launch
 * 🙈 view the HTML version of coverage reports
 * 👀 create a quick website to show someone something
 
-_smokeshow_ is here to help, it lets you use HTTP to upload files to create a static website.
-30 days after that site is created, it vanishes.
+_smokeshow_ is here to help. It lets you create a static website, 30 days after the site is created, it vanishes
+like smoke in the wind.
 
-A few advantages:
+What's great about _smokeshow_:
 * 💸 It's free
-* 🔑 You don't need to sign up, just create a key using the script below
+* 🔑 You don't need to sign up, just create a key using the instructions below
 * 💨 It's super fast around the world, _smokeshow_ uses CloudFlare's 280+ edge locations to store files meaning
-  they're next to your users
+  they're next to your users wherever they are
+
+## Usage Warning
+
+_smokeshow_ is currently free for anyone to use ([within limits](#limits)), but if it starts to cost me a 
+significant amount, I might reduce the limits, or stop it being free.
+Please [watch the github repo](https://github.com/samuelcolvin/smokeshow)
+to get notifications of changes to the service if you're using it regularly or in an automated way.
+
+_smokeshow_ is [open source](https://github.com/samuelcolvin/smokeshow) so if you want to modify it and/or deploy
+your own instance to cloudflare workers, you can.
 
 ## Usage
 
-**Notice**: Please see the warning about usage limits [below](#limits) before you automate usage of this service.
+Uploading a site to _smokeshow_ requires three steps:
 
-All you need to do is create an upload key where a numeric representation of its `sha-256`
-hash is less than `2 ^ 233`. In other words; a simple proof of work.
+1. Create an upload key where a numeric representation of its `sha-256` hash is less than `2 ^ 233`. 
+   In other words; a simple proof of work. This key can then be used to create multiple sites.
+2. Create a new site.
+3. Upload one or more files to that site.
 
-You can create a key using the following python3.6+ script:
+All three steps can be performed **either** [the python CLI](#cli-usage), or using [manually](#manual-usage).
+
+### CLI Usage
+
+The command line interface (CLI) for _smokeshow_ is written in python and available to download via 
+[pypi](https://pypi.org/project/smokeshow/). Assuming you have python 3.7+ and pip installed, installing
+the _smokeshow_ CLI should be as simple as:
+
+```bash
+pip install smokeshow
+```
+
+You can then get help on usage with:
+
+```bash
+smokeshow --help
+```
+
+To generate an upload key, use:
+
+```bash
+smokeshow generate-key
+```
+
+You should then set the key as an environment variable with
+
+```bash
+export SMOKESHOW_AUTH_KEY='...'
+```
+
+With that, you can upload a site with:
+
+```bash
+smokeshow upload path/to/upload
+```
+
+### Manual Usage
+
+You can create an upload key using the following python3.6+ script:
 
 ```python
 import base64, hashlib, os
@@ -46,15 +96,16 @@ while True:
 ```
 _(This script should take between a few seconds and a minute to generate a valid key)_
 
-Once you have your key, you can create a site using the following `curl` command:
+Once you have your key, create a site using the following `curl` command:
 
 ```bash
 curl -X POST \
   https://smokeshow.helpmanual.io/create/ \
   -H 'Authorisation:{generated-key-from-above}'
 ```
+
 This should create a site and return a JSON object with details required
-to upload files to the site:
+to upload files to that site:
 
 ```json
 {
@@ -121,7 +172,3 @@ The following limits apply to usage of _smokeshow_:
 * **50**: maximum number of sites you can create a day with a given key
 * **30 MB**: maximum site size
 * **25 MB**: maximum size of a file - this is a limit of [Cloudflare's KV store](https://developers.cloudflare.com/workers/platform/limits#kv-limits)
-
-**Notice:** _smokeshow_ is currently free for anyone to use, but if it starts to cost me a significant amount, I
-might reduce the limits, or stop it being free. Please [watch the github repo](https://github.com/samuelcolvin/smokeshow)
-to get notifications of changes to the service if you're using it regularly.
