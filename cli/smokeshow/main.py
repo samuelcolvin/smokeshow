@@ -64,7 +64,7 @@ async def upload(
     root_url: str = ROOT_URL,
 ) -> str:
     if auth_key is None:
-        print('No auth key provided, generating now...\n')
+        print('No auth key provided, generating one now...')
         auth_key_use = generate_key()
     else:
         auth_key_use = auth_key
@@ -139,11 +139,14 @@ GITHUB_API_ROOT = 'https://api.github.com'
 
 
 async def set_github_commit_status(client: AsyncClient, target_url: str, description: str) -> None:
+    import pprint
+
+    pprint.pprint(dict(os.environ))
     github_repo = os.environ['GITHUB_REPOSITORY']
-    github_sha = os.environ['GITHUB_SHA']
+    github_sha = os.environ.get('GITHUB_PR_HEAD_SHA') or os.environ['GITHUB_SHA']
     github_token = os.environ['GITHUB_TOKEN']
     url = f'{GITHUB_API_ROOT}/repos/{github_repo}/statuses/{github_sha}'
-    print(f'setting success status on github.com/{github_token}#{github_sha:.7}')
+    print(f'setting success status on github.com/{github_repo}#{github_sha:.7}')
     r = await client.post(
         url,
         headers={'authorization': f'Bearer {github_token}'},
@@ -156,5 +159,5 @@ async def set_github_commit_status(client: AsyncClient, target_url: str, descrip
     )
     if r.status_code != 201:
         raise ValueError(f'invalid response from "{url}" status={r.status_code} response={r.text}')
-    import pprint
+
     pprint.pprint(r.json())
