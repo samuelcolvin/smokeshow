@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 import pytest
 from aiohttp import web
-from aiohttp.abc import Request, Application
+from aiohttp.abc import Application, Request
 from aiohttp.test_utils import TestServer
 from aiohttp.web_response import json_response
 

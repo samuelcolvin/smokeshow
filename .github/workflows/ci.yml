@@ -113,13 +113,15 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: coverage_files
-          path: coverage
+          path: cli
 
-      - run: ls -la coverage/
-      - run: coverage combine coverage/
+      - run: ls -la cli/
+      - run: coverage combine
+        working-directory: cli
       - run: coverage html
+        working-directory: cli
 
-      - run: smokeshow upload htmlcov
+      - run: smokeshow upload cli/htmlcov
         env:
           GITHUB_STATUS_DESCRIPTION: CLI Coverage
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
