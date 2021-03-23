@@ -45,7 +45,9 @@ jobs:
         with:
           python-version: '3.8'
 
-      - run: make install
+      - run: |
+          pip install -U setuptools pip
+          pip install -U -r tests/requirements-linting.txt
         working-directory: cli
 
       - run: make lint
@@ -71,7 +73,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - run: make install
+      - run: |
+          pip install -U setuptools pip
+          pip install -U -r tests/requirements-testing.txt
+          pip install -e .
         working-directory: cli
       - run: pip freeze
 
@@ -84,7 +89,6 @@ jobs:
         run: |
           mkdir coverage
           mv .coverage coverage/.coverage.${{ matrix.os }}-py${{ matrix.python-version }}
-          ls -la coverage/
 
       - name: store coverage artifacts
         uses: actions/upload-artifact@v2
@@ -115,11 +119,14 @@ jobs:
           name: coverage_files
           path: cli
 
-      - run: ls -la cli/
-      - run: coverage combine
+      - name: build coverage
         working-directory: cli
-      - run: coverage html
-        working-directory: cli
+        run: |
+          pwd
+          ls -la
+          coverage combine
+          coverage html
+          ls -la
 
       - run: smokeshow upload cli/htmlcov
         env:

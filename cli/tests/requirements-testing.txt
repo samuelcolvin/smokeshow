@@ -1,0 +1,6 @@
+aiohttp==3.7.4.post0
+coverage==5.5
+pytest==6.2.2
+pytest-cov==2.11.1
+pytest-mock==3.5.1
+pytest-sugar==0.9.4
