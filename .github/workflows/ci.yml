@@ -9,7 +9,7 @@ on:
   pull_request: {}
 
 jobs:
-  lint-server:
+  server-lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,7 +22,7 @@ jobs:
       - run: yarn
       - run: yarn lint
 
-  test-server:
+  server-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -35,7 +35,7 @@ jobs:
     - run: yarn
 #    - run: yarn test --coverage
 
-  lint-cli:
+  cli-lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -53,8 +53,8 @@ jobs:
       - run: make mypy
         working-directory: cli
 
-  test-cli:
-    name: test CLI with py${{ matrix.python-version }} on ${{ matrix.os }}
+  cli-test:
+    name: cli-test-${{ matrix.os }}-py${{ matrix.python-version }}
     strategy:
       fail-fast: false
       matrix:
@@ -62,10 +62,6 @@ jobs:
         python-version: ['3.7', '3.8', '3.9']
 
     runs-on: ${{ matrix.os }}-latest
-
-    env:
-      PYTHON: ${{ matrix.python-version }}
-      OS: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v2
@@ -83,17 +79,14 @@ jobs:
         run: make test
         working-directory: cli
 
-      - run: coverage html
+      - name: rename coverage
         working-directory: cli
-
-      - run: |
+        run: |
           mkdir coverage
-          mv .coverage coverage/.coverage-$PYTHON-$OS
-          ls -la .
+          mv .coverage coverage/.coverage-${{ matrix.os }}-py${{ matrix.python-version }}
           ls -la coverage/
-        working-directory: cli
 
-      - name: Store dist artifacts
+      - name: store coverage artifacts
         uses: actions/upload-artifact@v2
         with:
           name: coverage_files
@@ -113,9 +106,10 @@ jobs:
           python-version: '3.8'
 
       - run: pip install .
+        working-directory: cli
       - run: pip install coverage
 
-      - name: get dist artifacts
+      - name: get coverage artifacts
         uses: actions/download-artifact@v2
         with:
           name: coverage_files
