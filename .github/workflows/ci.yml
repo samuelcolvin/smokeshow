@@ -86,6 +86,43 @@ jobs:
       - run: coverage html
         working-directory: cli
 
-#        # let's dog food!
-#      - run: smokeshow upload htmlcov
-#        working-directory: cli
+      - run: |
+          mkdir coverage
+          mv .coverage coverage/.coverage-$PYTHON-$OS
+          ls -la .
+          ls -la coverage/
+        working-directory: cli
+
+      - name: Store dist artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage_files
+          path: cli/coverage
+
+  coverage-report:
+    # dogfooding! use smokeshow to view our coverage report
+    needs:
+      - test-cli
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
+
+      - run: pip install .
+      - run: pip install coverage
+
+      - name: get dist artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: coverage_files
+          path: .
+
+      - run: ls -la
+      - run: coverage combine
+      - run: coverage html
+
+      - run: smokeshow upload htmlcov

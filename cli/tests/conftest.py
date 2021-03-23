@@ -5,7 +5,11 @@ import pytest
 from aiohttp import web
 from aiohttp.abc import Request
 from aiohttp.web_response import json_response
-from foxglove.test_server import create_dummy_server
+
+try:
+    from foxglove.test_server import create_dummy_server
+except ImportError:
+    create_dummy_server = None
 
 
 async def create(request: Request):
@@ -54,6 +58,9 @@ def fix_await(loop):
 
 @pytest.fixture(name='dummy_server')
 def _fix_dummy_server(loop):
+    if create_dummy_server is None:
+        pytest.skip('foxglove not installed')
+
     ctx = {'sites': [], 'files': {}}
     ds = loop.run_until_complete(create_dummy_server(loop, extra_routes=routes, extra_context=ctx))
 
