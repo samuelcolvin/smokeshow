@@ -54,11 +54,11 @@ jobs:
         working-directory: cli
 
   test-cli:
-    name: test CLI py${{ matrix.python-version }} on ${{ matrix.os }}
+    name: test CLI with py${{ matrix.python-version }} on ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu, windows, macos]
+        os: [ubuntu, macos]
         python-version: ['3.7', '3.8', '3.9']
 
     runs-on: ${{ matrix.os }}-latest
@@ -86,6 +86,6 @@ jobs:
       - run: coverage html
         working-directory: cli
 
-        # let's dog food!
-      - run: smokeshow upload htmlcov
-        working-directory: cli
+#        # let's dog food!
+#      - run: smokeshow upload htmlcov
+#        working-directory: cli
