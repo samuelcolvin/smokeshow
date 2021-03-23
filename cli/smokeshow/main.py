@@ -89,7 +89,7 @@ async def upload(
             ct = get_content_type(url_path)
             if ct:
                 headers['Content-Type'] = ct
-            r2 = await client.post(upload_root + url_path, data=file_path.read_bytes(), headers=headers)  # type: ignore
+            r2 = await client.post(upload_root + url_path, content=file_path.read_bytes(), headers=headers)
             if r2.status_code == 200:
                 upload_info = r2.json()
                 print(f'    {url_path} ct={ct} size={fmt_size(upload_info["size"])}')
@@ -141,8 +141,9 @@ GITHUB_API_ROOT = 'https://api.github.com'
 async def set_github_commit_status(client: AsyncClient, target_url: str, description: str) -> None:
     github_repo = os.environ['GITHUB_REPOSITORY']
     github_sha = os.environ['GITHUB_SHA']
-    url = f'{GITHUB_API_ROOT}/repos/{github_repo}/statuses/{github_sha}'
     github_token = os.environ['GITHUB_TOKEN']
+    url = f'{GITHUB_API_ROOT}/repos/{github_repo}/statuses/{github_sha}'
+    print(f'setting success status on github.com/{github_token}#{github_sha:.7}')
     r = await client.post(
         url,
         headers={'authorization': f'Bearer {github_token}'},
@@ -155,3 +156,5 @@ async def set_github_commit_status(client: AsyncClient, target_url: str, descrip
     )
     if r.status_code != 201:
         raise ValueError(f'invalid response from "{url}" status={r.status_code} response={r.text}')
+    import pprint
+    pprint.pprint(r.json())

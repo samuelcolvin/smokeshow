@@ -125,11 +125,8 @@ jobs:
       - name: build coverage
         working-directory: cli
         run: |
-          pwd
-          ls -la
           coverage combine
           coverage html -i
-          ls -la
 
       - run: smokeshow upload cli/htmlcov
         env:
