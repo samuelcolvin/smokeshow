@@ -1,15 +1,12 @@
 import asyncio
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 import pytest
 from aiohttp import web
-from aiohttp.abc import Request
+from aiohttp.abc import Request, Application
+from aiohttp.test_utils import TestServer
 from aiohttp.web_response import json_response
-
-try:
-    from foxglove.test_server import create_dummy_server
-except ImportError:
-    create_dummy_server = None
 
 
 async def create(request: Request):
@@ -56,13 +53,31 @@ def fix_await(loop):
     return loop.run_until_complete
 
 
+@dataclass
+class DummyServer:
+    server: TestServer
+    app: Application
+    server_name: str
+
+    async def stop(self):
+        await self.server.close()
+
+    @classmethod
+    async def create(cls, loop, app_context) -> 'DummyServer':
+        app = web.Application()
+        app.add_routes(routes)
+        app.update(app_context)
+
+        server = TestServer(app)
+        await server.start_server(loop=loop)
+
+        return cls(server, app, f'http://localhost:{server.port}')
+
+
 @pytest.fixture(name='dummy_server')
 def _fix_dummy_server(loop):
-    if create_dummy_server is None:
-        pytest.skip('foxglove not installed')
-
     ctx = {'sites': [], 'files': {}}
-    ds = loop.run_until_complete(create_dummy_server(loop, extra_routes=routes, extra_context=ctx))
+    ds = loop.run_until_complete(DummyServer.create(loop, ctx))
 
     yield ds
 

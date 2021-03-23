@@ -83,7 +83,7 @@ jobs:
         working-directory: cli
         run: |
           mkdir coverage
-          mv .coverage coverage/.coverage-${{ matrix.os }}-py${{ matrix.python-version }}
+          mv .coverage coverage/.coverage.${{ matrix.os }}-py${{ matrix.python-version }}
           ls -la coverage/
 
       - name: store coverage artifacts
@@ -113,10 +113,10 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: coverage_files
-          path: .
+          path: coverage
 
-      - run: ls -la
-      - run: coverage combine
+      - run: ls -la coverage/
+      - run: coverage combine coverage/
       - run: coverage html
 
       - run: smokeshow upload htmlcov
