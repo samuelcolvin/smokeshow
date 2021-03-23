@@ -128,13 +128,9 @@ jobs:
           coverage combine
           coverage html -i
 
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-
       - run: smokeshow upload cli/htmlcov
         env:
-          GITHUB_STATUS_DESCRIPTION: CLI Coverage
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          SMOKESHOW_GITHUB_STATUS_DESCRIPTION: CLI Coverage Report {coverage-percentage}
+          SMOKESHOW_GITHUB_COVERAGE_THRESHOLD: 80
+          SMOKESHOW_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SMOKESHOW_GITHUB_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}

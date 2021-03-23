@@ -47,10 +47,19 @@ def cli_upload(
     path: Path = Argument(..., exists=True, dir_okay=True, file_okay=True, readable=True, resolve_path=True),
     auth_key: Optional[str] = Option(None, envvar='SMOKESHOW_AUTH_KEY'),
     root_url: str = Option(ROOT_URL, envvar='SMOKESHOW_ROOT_URL'),
-    github_status_description: Optional[str] = Option(None, envvar='GITHUB_STATUS_DESCRIPTION'),
+    github_status_description: Optional[str] = Option(None, envvar='SMOKESHOW_GITHUB_STATUS_DESCRIPTION'),
+    github_coverage_threshold: Optional[float] = Option(None, envvar='SMOKESHOW_GITHUB_COVERAGE_THRESHOLD'),
 ) -> None:
     try:
-        asyncio.run(upload(path, auth_key, github_status_description=github_status_description, root_url=root_url))
+        asyncio.run(
+            upload(
+                path,
+                auth_key,
+                github_status_description=github_status_description,
+                github_coverage_threshold=github_coverage_threshold,
+                root_url=root_url,
+            )
+        )
     except ValueError as e:
         print(e, file=sys.stderr)
         raise Exit(1)
@@ -61,6 +70,7 @@ async def upload(
     auth_key: Optional[str],
     *,
     github_status_description: Optional[str] = None,
+    github_coverage_threshold: Optional[float] = None,
     root_url: str = ROOT_URL,
 ) -> str:
     if auth_key is None:
@@ -110,7 +120,9 @@ async def upload(
         print(f'upload complete ✓ site size {fmt_size(total_size)}')
         print('go to', upload_root)
         if github_status_description is not None:
-            await set_github_commit_status(client, upload_root, github_status_description)
+            await set_github_commit_status(
+                client, root_path, upload_root, github_status_description, github_coverage_threshold
+            )
 
     return upload_root
 
@@ -138,20 +150,33 @@ def fmt_size(num: int) -> str:
 GITHUB_API_ROOT = 'https://api.github.com'
 
 
-async def set_github_commit_status(client: AsyncClient, target_url: str, description: str) -> None:
-    import pprint
+async def set_github_commit_status(
+    client: AsyncClient, path: Path, target_url: str, description: str, coverage_threshold: Optional[float]
+) -> None:
+    state = 'success'
+    if ('{coverage-percentage}' in description.lower() or coverage_threshold is not None) and path.is_dir():
+        index_path = path / 'index.html'
+        if index_path.is_file():
+            m = re.search(r'<span\s+class="pc_cov">\s*([\d.]+)%\s*</span>', index_path.read_text())
+            if m:
+                coverage = float(m.group(1))
+                if coverage_threshold is not None and coverage < coverage_threshold:
+                    state = 'failure'
+                    d = f'{coverage:0.2f}% < {coverage_threshold:0.2f}%'
+                else:
+                    d = f'{coverage:0.2f}%'
+                description = re.sub('{coverage-percentage}', d, description, flags=re.I)
 
-    pprint.pprint(dict(os.environ))
     github_repo = os.environ['GITHUB_REPOSITORY']
-    github_sha = os.environ.get('GITHUB_PR_HEAD_SHA') or os.environ['GITHUB_SHA']
-    github_token = os.environ['GITHUB_TOKEN']
+    github_sha = os.environ.get('SMOKESHOW_GITHUB_PR_HEAD_SHA') or os.environ['GITHUB_SHA']
+    github_token = os.environ['SMOKESHOW_GITHUB_TOKEN']
     url = f'{GITHUB_API_ROOT}/repos/{github_repo}/statuses/{github_sha}'
-    print(f'setting success status on github.com/{github_repo}#{github_sha:.7}')
+    print(f'setting status on github.com/{github_repo}#{github_sha:.7}, {state}: "{description}"')
     r = await client.post(
         url,
         headers={'authorization': f'Bearer {github_token}'},
         json={
-            'state': 'success',
+            'state': state,
             'target_url': target_url,
             'description': description,
             'context': 'smokeshow',
@@ -159,5 +184,3 @@ async def set_github_commit_status(client: AsyncClient, target_url: str, descrip
     )
     if r.status_code != 201:
         raise ValueError(f'invalid response from "{url}" status={r.status_code} response={r.text}')
-
-    pprint.pprint(r.json())
