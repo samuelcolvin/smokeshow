@@ -47,15 +47,22 @@ def cli_upload(
     path: Path = Argument(..., exists=True, dir_okay=True, file_okay=True, readable=True, resolve_path=True),
     auth_key: Optional[str] = Option(None, envvar='SMOKESHOW_AUTH_KEY'),
     root_url: str = Option(ROOT_URL, envvar='SMOKESHOW_ROOT_URL'),
+    github_status_description: Optional[str] = Option(None, envvar='GITHUB_STATUS_DESCRIPTION'),
 ) -> None:
     try:
-        asyncio.run(upload(path, auth_key, root_url=root_url))
+        asyncio.run(upload(path, auth_key, github_status_description=github_status_description, root_url=root_url))
     except ValueError as e:
         print(e, file=sys.stderr)
         raise Exit(1)
 
 
-async def upload(root_path: Path, auth_key: Optional[str], *, root_url: str = ROOT_URL) -> str:
+async def upload(
+    root_path: Path,
+    auth_key: Optional[str],
+    *,
+    github_status_description: Optional[str] = None,
+    root_url: str = ROOT_URL,
+) -> str:
     if auth_key is None:
         print('No auth key provided, generating now...\n')
         auth_key_use = generate_key()
@@ -102,6 +109,8 @@ async def upload(root_path: Path, auth_key: Optional[str], *, root_url: str = RO
 
         print(f'upload complete ✓ site size {fmt_size(total_size)}')
         print('go to', upload_root)
+        if github_status_description is not None:
+            await set_github_commit_status(client, upload_root, github_status_description)
 
     return upload_root
 
@@ -124,3 +133,25 @@ def fmt_size(num: int) -> str:
         return f'{num / KB:0.1f}KB'
     else:
         return f'{num / MB:0.1f}MB'
+
+
+GITHUB_API_ROOT = 'https://api.github.com'
+
+
+async def set_github_commit_status(client: AsyncClient, target_url: str, description: str) -> None:
+    github_repo = os.environ['GITHUB_REPOSITORY']
+    github_sha = os.environ['GITHUB_SHA']
+    url = f'{GITHUB_API_ROOT}/repos/{github_repo}/statuses/{github_sha}'
+    github_token = os.environ['GITHUB_TOKEN']
+    r = await client.post(
+        url,
+        headers={'authorization': f'Bearer {github_token}'},
+        json={
+            'state': 'success',
+            'target_url': target_url,
+            'description': description,
+            'context': 'smokeshow',
+        },
+    )
+    if r.status_code != 201:
+        raise ValueError(f'invalid response from "{url}" status={r.status_code} response={r.text}')

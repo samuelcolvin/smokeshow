@@ -92,10 +92,10 @@ jobs:
           name: coverage_files
           path: cli/coverage
 
-  coverage-report:
+  cli-coverage-report:
     # dogfooding! use smokeshow to view our coverage report
     needs:
-      - test-cli
+      - cli-test
     runs-on: ubuntu-latest
 
     steps:
@@ -120,3 +120,6 @@ jobs:
       - run: coverage html
 
       - run: smokeshow upload htmlcov
+        env:
+          GITHUB_STATUS_DESCRIPTION: CLI Coverage
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
