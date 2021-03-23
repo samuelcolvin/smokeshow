@@ -45,10 +45,12 @@ jobs:
         with:
           python-version: '3.8'
 
-      - run: |
+      - name: install
+        working-directory: cli
+        run: |
           pip install -U setuptools pip
           pip install -U -r tests/requirements-linting.txt
-        working-directory: cli
+          pip install -e .
 
       - run: make lint
         working-directory: cli
@@ -73,11 +75,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - run: |
+      - name: install
+        working-directory: cli
+        run: |
           pip install -U setuptools pip
           pip install -U -r tests/requirements-testing.txt
           pip install -e .
-        working-directory: cli
       - run: pip freeze
 
       - name: test
@@ -125,7 +128,7 @@ jobs:
           pwd
           ls -la
           coverage combine
-          coverage html
+          coverage html -i
           ls -la
 
       - run: smokeshow upload cli/htmlcov
