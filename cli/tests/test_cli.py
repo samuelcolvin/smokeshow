@@ -1,3 +1,5 @@
+from asyncio import Future
+
 from typer.testing import CliRunner
 
 from smokeshow.main import cli
@@ -21,7 +23,9 @@ def test_generate_key(mocker):
 
 
 def test_upload_success(tmp_path, mocker):
-    mocker.patch('smokeshow.main.upload')
+    f = Future()
+    f.set_result(None)
+    mocker.patch('smokeshow.main.upload', return_value=f)
     f = tmp_path / 'test.html'
     f.write_text('<h1>testing</h1>')
 

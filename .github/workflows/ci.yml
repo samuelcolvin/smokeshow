@@ -117,7 +117,7 @@ jobs:
       - run: pip install coverage
 
       - name: get coverage artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v2test_upload_success
         with:
           name: coverage_files
           path: cli
