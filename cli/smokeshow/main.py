@@ -19,7 +19,7 @@ USER_AGENT = f'smokeshow-cli-v{VERSION}'
 KEY_HASH_THRESHOLD_POW = 234
 KEY_HASH_THRESHOLD = 2 ** KEY_HASH_THRESHOLD_POW
 ROOT_URL = 'https://smokeshow.helpmanual.io'
-cli = Typer(help='smokeshow CLI, see https://smokeshow.helpmanual.io for more information.')
+cli = Typer(name='smokeshow', help='smokeshow CLI, see https://smokeshow.helpmanual.io for more information.')
 
 
 @cli.command(help='Generate a new upload key')
@@ -169,12 +169,13 @@ async def set_github_commit_status(
 
     github_repo = os.environ['GITHUB_REPOSITORY']
     github_sha = os.environ.get('SMOKESHOW_GITHUB_PR_HEAD_SHA') or os.environ['GITHUB_SHA']
-    github_token = os.environ['SMOKESHOW_GITHUB_TOKEN']
     url = f'{GITHUB_API_ROOT}/repos/{github_repo}/statuses/{github_sha}'
     print(f'setting status on github.com/{github_repo}#{github_sha:.7}, {state}: "{description}"')
+
+    github_token = os.environ['GITHUB_TOKEN']
     r = await client.post(
         url,
-        headers={'authorization': f'Bearer {github_token}'},
+        headers={'authorization': f'Bearer {github_token}', 'accept': 'application/vnd.github.v3+json'},
         json={
             'state': state,
             'target_url': target_url,
