@@ -18,3 +18,25 @@ def test_generate_key(mocker):
     assert result.exit_code == 0
     assert 'Success! Key found after' in result.stdout
     assert '    SMOKESHOW_AUTH_KEY=' in result.stdout
+
+
+def test_upload_success(tmp_path, mocker):
+    mocker.patch('smokeshow.main.upload')
+    f = tmp_path / 'test.html'
+    f.write_text('<h1>testing</h1>')
+
+    result = runner.invoke(cli, ['upload', str(tmp_path)])
+    assert result.exit_code == 0, result.stdout
+    assert result.stdout == ''
+
+
+def test_upload_error(tmp_path, mocker):
+    mocker_upload = mocker.patch('smokeshow.main.upload', side_effect=ValueError('intentional error testing upload'))
+    f = tmp_path / 'test.html'
+    f.write_text('<h1>testing</h1>')
+
+    result = runner.invoke(cli, ['upload', str(tmp_path)])
+    assert result.exit_code == 1, result.stdout
+    assert result.stdout == 'intentional error testing upload\n'
+
+    mocker_upload.assert_called_once()

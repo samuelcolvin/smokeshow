@@ -6,7 +6,7 @@ import re
 import sys
 from mimetypes import guess_type
 from pathlib import Path
-from typing import Optional, Union, cast
+from typing import Optional, Tuple, Union, cast
 
 from httpx import AsyncClient
 from typer import Argument, Exit, Option, Typer
@@ -54,7 +54,7 @@ def cli_upload(
         asyncio.run(
             upload(
                 path,
-                auth_key,
+                auth_key=auth_key,
                 github_status_description=github_status_description,
                 github_coverage_threshold=github_coverage_threshold,
                 root_url=root_url,
@@ -67,8 +67,8 @@ def cli_upload(
 
 async def upload(
     root_path: Path,
-    auth_key: Optional[str],
     *,
+    auth_key: Optional[str] = None,
     github_status_description: Optional[str] = None,
     github_coverage_threshold: Optional[float] = None,
     root_url: str = ROOT_URL,
@@ -120,9 +120,8 @@ async def upload(
         print(f'upload complete ✓ site size {fmt_size(total_size)}')
         print('go to', upload_root)
         if github_status_description is not None:
-            await set_github_commit_status(
-                client, root_path, upload_root, github_status_description, github_coverage_threshold
-            )
+            state, description = get_github_status_info(root_path, github_status_description, github_coverage_threshold)
+            await set_github_commit_status(client, upload_root, state, description)
 
     return upload_root
 
@@ -150,23 +149,28 @@ def fmt_size(num: int) -> str:
 GITHUB_API_ROOT = 'https://api.github.com'
 
 
-async def set_github_commit_status(
-    client: AsyncClient, path: Path, target_url: str, description: str, coverage_threshold: Optional[float]
-) -> None:
+def get_github_status_info(path: Path, description: str, coverage_threshold: Optional[float]) -> Tuple[str, str]:
     state = 'success'
-    if ('{coverage-percentage}' in description.lower() or coverage_threshold is not None) and path.is_dir():
-        index_path = path / 'index.html'
-        if index_path.is_file():
-            m = re.search(r'<span\s+class="pc_cov">\s*([\d.]+)%\s*</span>', index_path.read_text())
-            if m:
-                coverage = float(m.group(1))
-                if coverage_threshold is not None and coverage < coverage_threshold:
-                    state = 'failure'
-                    d = f'{coverage:0.2f}% < {coverage_threshold:0.2f}%'
-                else:
-                    d = f'{coverage:0.2f}%'
-                description = re.sub('{coverage-percentage}', d, description, flags=re.I)
+    if '{coverage-percentage}' not in description.lower() and coverage_threshold is None:
+        return state, description
 
+    cov_sub = '{COVERAGE NOT FOUND}'
+    index_path = path / 'index.html'
+    if index_path.is_file():
+        m = re.search(r'<span\s+class="pc_cov">\s*([\d.]+)%\s*</span>', index_path.read_text())
+        if m:
+            coverage = float(m.group(1))
+            if coverage_threshold is not None and coverage < coverage_threshold:
+                state = 'failure'
+                cov_sub = f'{coverage:0.2f}% < {coverage_threshold:0.2f}%'
+            else:
+                cov_sub = f'{coverage:0.2f}%'
+
+    description = re.sub('{coverage-percentage}', cov_sub, description, flags=re.I)
+    return state, description
+
+
+async def set_github_commit_status(client: AsyncClient, target_url: str, state: str, description: str) -> None:
     github_repo = os.environ['GITHUB_REPOSITORY']
     github_sha = os.environ.get('SMOKESHOW_GITHUB_PR_HEAD_SHA') or os.environ['GITHUB_SHA']
     url = f'{GITHUB_API_ROOT}/repos/{github_repo}/statuses/{github_sha}'

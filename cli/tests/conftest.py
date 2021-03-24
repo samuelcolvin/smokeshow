@@ -1,4 +1,5 @@
 import asyncio
+import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -7,6 +8,7 @@ from aiohttp import web
 from aiohttp.abc import Application, Request
 from aiohttp.test_utils import TestServer
 from aiohttp.web_response import json_response
+from httpx import AsyncClient
 
 
 async def create(request: Request):
@@ -28,18 +30,25 @@ async def create(request: Request):
 
 async def upload(request: Request):
     body = await request.read()
-    request.app['files'][request.path] = body
+    request.app['files'][request.path] = {'body': body, 'content-type': request.headers.get('content-type')}
     return json_response({'size': 123, 'total_site_size': 1234})
+
+
+async def commit_update(request: Request):
+    obj = await request.json()
+    request.app['statuses'][request.match_info['path']] = obj
+    return json_response({}, status=201)
 
 
 routes = [
     web.post('/create/', create),
     web.post('/testing-site/{file:.*}', upload),
+    web.post('/github/{path:.*}', commit_update),
 ]
 
 
 @pytest.fixture(name='loop')
-def fix_loop():
+def _fix_loop():
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError:
@@ -49,7 +58,7 @@ def fix_loop():
 
 
 @pytest.fixture(name='await_')
-def fix_await(loop):
+def _fix_await(loop):
     return loop.run_until_complete
 
 
@@ -76,9 +85,44 @@ class DummyServer:
 
 @pytest.fixture(name='dummy_server')
 def _fix_dummy_server(loop):
-    ctx = {'sites': [], 'files': {}}
+    ctx = {'sites': [], 'files': {}, 'statuses': {}}
     ds = loop.run_until_complete(DummyServer.create(loop, ctx))
 
     yield ds
 
     loop.run_until_complete(ds.stop())
+
+
+class SetEnv:
+    def __init__(self):
+        self.env_defaults = {}
+
+    def set(self, name, value):
+        self.env_defaults[name] = os.environ.get(name)
+        os.environ[name] = value
+
+    def clear(self):
+        for name, value in self.env_defaults.items():
+            if value is None:
+                os.environ.pop(name)
+            else:
+                os.environ[name] = value
+
+
+@pytest.fixture(name='env')
+def _fix_env():
+    setenv = SetEnv()
+
+    yield setenv
+
+    setenv.clear()
+
+
+@pytest.fixture(name='client')
+def _fix_client(await_):
+    client = AsyncClient()
+    await_(client.__aenter__())
+
+    yield client
+
+    await_(client.__aexit__())
