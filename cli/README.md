@@ -1,6 +1,7 @@
 # Smokeshow CLI
 
 [![CI](https://github.com/samuelcolvin/hightmp/workflows/CI/badge.svg?event=push)](https://github.com/samuelcolvin/hightmp/actions?query=event%3Apush+branch%3Amain+workflow%3ACI)
+[![license](https://img.shields.io/github/license/samuelcolvin/smokeshow.svg)](https://github.com/samuelcolvin/smokeshow/blob/master/LICENSE)
 
 CLI to deploy ephemeral websites, see [smokeshow.helpmanual.io](https://smokeshow.helpmanual.io) for more information.
 
