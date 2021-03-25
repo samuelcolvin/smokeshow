@@ -9,7 +9,20 @@ on:
   pull_request: {}
 
 jobs:
-  test:
+  server-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+      - run: yarn
+      - run: yarn lint
+
+  server-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,15 +35,102 @@ jobs:
     - run: yarn
 #    - run: yarn test --coverage
 
-  lint:
+  cli-lint:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - uses: actions/setup-node@v1
-      with:
-        node-version: '14.x'
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
 
-    - run: yarn
-    - run: yarn lint
+      - name: install
+        working-directory: cli
+        run: |
+          pip install -U setuptools pip
+          pip install -U -r tests/requirements-linting.txt
+          pip install -e .
+
+      - run: make lint
+        working-directory: cli
+      - run: make mypy
+        working-directory: cli
+
+  cli-test:
+    name: cli-test-${{ matrix.os }}-py${{ matrix.python-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, macos]
+        python-version: ['3.7', '3.8', '3.9']
+
+    runs-on: ${{ matrix.os }}-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: set up python
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: install
+        working-directory: cli
+        run: |
+          pip install -U setuptools pip
+          pip install -U -r tests/requirements-testing.txt
+          pip install -e .
+      - run: pip freeze
+
+      - name: test
+        run: make test
+        working-directory: cli
+
+      - name: rename coverage
+        working-directory: cli
+        run: |
+          mkdir coverage
+          mv .coverage coverage/.coverage.${{ matrix.os }}-py${{ matrix.python-version }}
+
+      - name: store coverage artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage_files
+          path: cli/coverage
+
+  cli-coverage-check:
+    # dogfooding! use smokeshow to view our coverage report
+    needs:
+      - cli-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
+
+      - run: pip install .
+        working-directory: cli
+      - run: pip install coverage
+
+      - name: get coverage artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: coverage_files
+          path: cli
+
+      - name: build coverage
+        working-directory: cli
+        run: |
+          coverage combine
+          coverage html -i
+
+      - run: smokeshow upload cli/htmlcov
+        env:
+          SMOKESHOW_GITHUB_STATUS_DESCRIPTION: CLI Coverage {coverage-percentage}
+          SMOKESHOW_GITHUB_COVERAGE_THRESHOLD: 90
+          SMOKESHOW_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SMOKESHOW_GITHUB_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}

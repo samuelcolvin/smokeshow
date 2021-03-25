@@ -1,7 +1,6 @@
-/dist/
+dist/
 node_modules/
 /secrets.sh
 /worker/
 /.idea/
-/env/
 /site/

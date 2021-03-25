@@ -129,6 +129,6 @@ export async function site_summary(public_key: string): Promise<Record<string, a
   const obj = raw as Record<string, any>
   const files = await list_all(`site:${public_key}:`)
   obj.files = files.map(k => k.name.substr(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)
-  obj.total_size = files.map(k => k.metadata.size).reduce((a, v) => a + v, 0)
+  obj.total_site_size = files.map(k => k.metadata.size).reduce((a, v) => a + v, 0)
   return obj
 }
