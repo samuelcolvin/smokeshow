@@ -3,13 +3,4 @@ node_modules/
 /secrets.sh
 /worker/
 /.idea/
-env/
 /site/
-/cli/build/
-/cli/.coverage
-/cli/htmlcov/
-*.lock
-*.py[cod]
-*.egg-info/
-.cache/
-.mypy_cache/

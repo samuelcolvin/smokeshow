@@ -22,10 +22,12 @@ def test_generate_key(mocker):
     assert '    SMOKESHOW_AUTH_KEY=' in result.stdout
 
 
+async def coro():
+    ...
+
+
 def test_upload_success(tmp_path, mocker):
-    f = Future()
-    f.set_result(None)
-    mocker.patch('smokeshow.main.upload', return_value=f)
+    mocker.patch('smokeshow.main.upload', return_value=coro())
     f = tmp_path / 'test.html'
     f.write_text('<h1>testing</h1>')
 
