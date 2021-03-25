@@ -4,6 +4,12 @@
 [![pypi](https://img.shields.io/pypi/v/smokeshow.svg)](https://pypi.python.org/pypi/smokeshow)
 [![license](https://img.shields.io/github/license/samuelcolvin/smokeshow.svg)](https://github.com/samuelcolvin/smokeshow/blob/master/LICENSE)
 
+<p align="center">
+  <a href="https://smokeshow.helpmanual.io">
+    <img src="https://smokeshow.helpmanual.io/logo.svg" alt="smokeshow" width="400" height="400">
+  </a>
+</p>
+
 Deploy ephemeral websites via HTTP or [the CLI](#cli-usage).
 
 If you need to do any of the following:

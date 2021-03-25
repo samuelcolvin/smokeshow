@@ -90,11 +90,21 @@ async function post_file(request: Request, public_key: string, path: string): Pr
 }
 
 const site_path_regex = new RegExp(`^\\/([a-z0-9]{${PUBLIC_KEY_LENGTH}})(\\/.*)`)
+const fonts_root = 'https://raw.githubusercontent.com/rsms/inter/v3.15'
+const this_repo_root = 'https://raw.githubusercontent.com/samuelcolvin/smokeshow/favicons'
 
 export const views: View[] = [
   {
     match: '/',
     view: async () => simple_response(index_html_final, 'text/html', 3600),
+  },
+  {
+    match: '/favicon.ico',
+    view: async () => cached_proxy(`${this_repo_root}/icons/favicon.ico`, 'image/vnd.microsoft.icon')
+  },
+  {
+    match: '/logo.svg',
+    view: async () => cached_proxy(`${this_repo_root}/icons/logo.svg`, 'image/svg+xml')
   },
   {
     match: '/styles.css',
@@ -104,10 +114,7 @@ export const views: View[] = [
     match: /^\/fonts\/Inter-(Regular|Medium|Bold).(woff|woff2)$/,
     view: (request, info) => {
       const [, weight, ext] = info.match as RegExpMatchArray
-      return cached_proxy(
-        `https://raw.githubusercontent.com/rsms/inter/v3.15/docs/font-files/Inter-${weight}.${ext}`,
-        `font/${ext}`,
-      )
+      return cached_proxy(`${fonts_root}/docs/font-files/Inter-${weight}.${ext}`, `font/${ext}`)
     },
   },
   {
