@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://smokeshow.helpmanual.io">
-    <img src="https://smokeshow.helpmanual.io/icon.svg" alt="smokeshow" width="400" height="400">
+    <img src="https://smokeshow.helpmanual.io/icon.svg" alt="smokeshow" width="200" height="200">
   </a>
 </p>
 
