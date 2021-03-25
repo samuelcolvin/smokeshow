@@ -99,7 +99,7 @@ jobs:
           name: coverage_files
           path: cli/coverage
 
-  cli-coverage-report:
+  cli-coverage-check:
     # dogfooding! use smokeshow to view our coverage report
     needs:
       - cli-test
@@ -117,7 +117,7 @@ jobs:
       - run: pip install coverage
 
       - name: get coverage artifacts
-        uses: actions/download-artifact@v2test_upload_success
+        uses: actions/download-artifact@v2
         with:
           name: coverage_files
           path: cli
