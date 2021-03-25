@@ -100,11 +100,11 @@ export const views: View[] = [
   },
   {
     match: '/favicon.ico',
-    view: async () => cached_proxy(`${this_repo_root}/icons/favicon.ico`, 'image/vnd.microsoft.icon')
+    view: async () => cached_proxy(`${this_repo_root}/icons/favicon.ico`, 'image/vnd.microsoft.icon'),
   },
   {
     match: '/icon.svg',
-    view: async () => cached_proxy(`${this_repo_root}/icons/icon.svg`, 'image/svg+xml')
+    view: async () => cached_proxy(`${this_repo_root}/icons/icon.svg`, 'image/svg+xml'),
   },
   {
     match: '/styles.css',
