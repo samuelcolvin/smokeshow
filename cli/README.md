@@ -71,7 +71,7 @@ Example of setting the commit status from a github action:
 ```
 
 (this is taken directly from smokeshow's own CI, see
-[here](https://github.com/samuelcolvin/smokeshow/blob/034e6cf416fc31a17bbb9b68c77623006d39dcd5/.github/workflows/ci.yml#L131-L136))
+[here](https://github.com/samuelcolvin/smokeshow/blob/2985a676ff057394e032a4713c5d8c572bb40744/.github/workflows/ci.yml#L131-L136))
 
 The following environment variables are used when setting commit statuses:
 

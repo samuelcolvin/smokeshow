@@ -93,10 +93,10 @@ jobs:
           mkdir coverage
           mv .coverage coverage/.coverage.${{ matrix.os }}-py${{ matrix.python-version }}
 
-      - name: store coverage artifacts
+      - name: store coverage files
         uses: actions/upload-artifact@v2
         with:
-          name: coverage_files
+          name: coverage
           path: cli/coverage
 
   cli-coverage-check:
@@ -112,15 +112,13 @@ jobs:
         with:
           python-version: '3.8'
 
-      - run: pip install .
-        working-directory: cli
-      - run: pip install coverage
-
-      - name: get coverage artifacts
+      - name: get coverage files
         uses: actions/download-artifact@v2
         with:
-          name: coverage_files
+          name: coverage
           path: cli
+
+      - run: pip install coverage smokeshow
 
       - name: build coverage
         working-directory: cli
