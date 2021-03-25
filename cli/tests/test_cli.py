@@ -1,5 +1,7 @@
+import sys
 from asyncio import Future
 
+import pytest
 from typer.testing import CliRunner
 
 from smokeshow.main import cli
@@ -22,12 +24,9 @@ def test_generate_key(mocker):
     assert '    SMOKESHOW_AUTH_KEY=' in result.stdout
 
 
-async def coro():
-    ...
-
-
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="Mock doesn't work well with async code in 3.7")
 def test_upload_success(tmp_path, mocker):
-    mocker.patch('smokeshow.main.upload', return_value=coro())
+    mocker.patch('smokeshow.main.upload')
     f = tmp_path / 'test.html'
     f.write_text('<h1>testing</h1>')
 
