@@ -6,11 +6,11 @@
 
 <p align="center">
   <a href="https://smokeshow.helpmanual.io">
-    <img src="https://smokeshow.helpmanual.io/logo.svg" alt="smokeshow" width="400" height="400">
+    <img src="https://smokeshow.helpmanual.io/icon.svg" alt="smokeshow" width="400" height="400">
   </a>
 </p>
 
-Deploy ephemeral websites via HTTP or [the CLI](#cli-usage).
+Deploy ephemeral websites via HTTP or [a CLI](#cli-usage).
 
 If you need to do any of the following:
 * 🚀 preview a site before launch

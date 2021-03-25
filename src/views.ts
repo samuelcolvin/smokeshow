@@ -91,7 +91,7 @@ async function post_file(request: Request, public_key: string, path: string): Pr
 
 const site_path_regex = new RegExp(`^\\/([a-z0-9]{${PUBLIC_KEY_LENGTH}})(\\/.*)`)
 const fonts_root = 'https://raw.githubusercontent.com/rsms/inter/v3.15'
-const this_repo_root = 'https://raw.githubusercontent.com/samuelcolvin/smokeshow/favicons'
+const this_repo_root = 'https://raw.githubusercontent.com/samuelcolvin/smokeshow/master'
 
 export const views: View[] = [
   {
@@ -103,8 +103,8 @@ export const views: View[] = [
     view: async () => cached_proxy(`${this_repo_root}/icons/favicon.ico`, 'image/vnd.microsoft.icon')
   },
   {
-    match: '/logo.svg',
-    view: async () => cached_proxy(`${this_repo_root}/icons/logo.svg`, 'image/svg+xml')
+    match: '/icon.svg',
+    view: async () => cached_proxy(`${this_repo_root}/icons/icon.svg`, 'image/svg+xml')
   },
   {
     match: '/styles.css',
