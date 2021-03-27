@@ -133,6 +133,7 @@ The following environment variables are used when setting commit statuses:
   are used to decide which commit to set the status on.
   The `SMOKESHOW_GITHUB_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}` trick shown above is required since
   github set the `GITHUB_SHA` env var to a merge commit on pull requests which isn't what you want
+* `SMOKESHOW_GITHUB_CONTEXT` suffix for github status context
 * `GITHUB_REPOSITORY` is set automatically by github actions, it's used to choose the repo to set the status on
 
 ### Manual Usage
