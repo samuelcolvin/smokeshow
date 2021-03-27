@@ -9,7 +9,7 @@
     "format": "prettier --write 'src/**/*.{js,ts,css,scss,html}'",
     "lint": "eslint --max-warnings=0 src && prettier --check 'src/**/*.{js,ts,css,scss,html}'"
   },
-  "author": "author",
+  "author": "Samuel Colvin",
   "license": "MIT",
   "dependencies": {
     "@cloudflare/workers-types": "^2.0.0",

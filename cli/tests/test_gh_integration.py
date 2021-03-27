@@ -23,6 +23,8 @@ def test_status_success(tmp_path):
         ('55.4', 'test', 40, ('success', 'test')),
         ('55.4', '{COVERAGE-PERCENTAGE}', 60, ('failure', '55.40% < 60.00%')),
         ('55.4', '', 60, ('failure', '')),
+        ('100', 'test {coverage-percentage}', 100, ('success', 'test 100.00%')),
+        ('99.99', 'test {coverage-percentage}', 100, ('failure', 'test 99.99% < 100.00%')),
     ],
 )
 def test_statues(tmp_path, coverage, description, threshold, output):
