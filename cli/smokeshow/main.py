@@ -177,6 +177,10 @@ async def set_github_commit_status(client: AsyncClient, target_url: str, state: 
     print(f'setting status on github.com/{github_repo}#{github_sha:.7}, {state}: "{description}"')
 
     github_token = os.environ['SMOKESHOW_GITHUB_TOKEN']
+    context = 'smokeshow'
+    github_context = os.environ.get('SMOKESHOW_GITHUB_CONTEXT')
+    if github_context:
+        context += f' / {github_context}'
     r = await client.post(
         url,
         headers={'authorization': f'Bearer {github_token}', 'accept': 'application/vnd.github.v3+json'},
@@ -184,7 +188,7 @@ async def set_github_commit_status(client: AsyncClient, target_url: str, state: 
             'state': state,
             'target_url': target_url,
             'description': description,
-            'context': 'smokeshow',
+            'context': context,
         },
     )
     if r.status_code != 201:
