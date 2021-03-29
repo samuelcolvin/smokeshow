@@ -1,19 +1,20 @@
-name = "smokeshow"
+name = "smokeshow-staging"
 type = "webpack"
 account_id = "d6252a570c309c113744c9e11317e271"
-route = "smokeshow.helpmanual.io/*"
-zone_id = "653b9d1efbeea2a2602b73ac5ea8d388"  # helpmanual.io
-webpack_config = "webpack.config.js"
-kv_namespaces = [
-	{binding="STORAGE", id="74015bfa1d2443dfaaba49276b0d4310"}
-]
-
-[env.staging]
-name = "smokeshow-staging"
 workers_dev = true
 route = ""
+webpack_config = "webpack.config.js"
 kv_namespaces = [
-	{binding = "STORAGE", id = "b4ba1fc5fb614af7be37ad63a42c218d", preview_id="6b60f496af50470784eaf3a118032148"}
+	{binding="STORAGE", id="b4ba1fc5fb614af7be37ad63a42c218d", preview_id="6b60f496af50470784eaf3a118032148"}
 ]
-[env.staging.vars]
 DEBUG = "TRUE"
+
+[env.production]
+name = "smokeshow"
+route = "smokeshow.helpmanual.io/*"
+zone_id = "653b9d1efbeea2a2602b73ac5ea8d388"  # helpmanual.io
+kv_namespaces = [
+	{binding = "STORAGE", id = "74015bfa1d2443dfaaba49276b0d4310"}
+]
+[env.production.vars]
+DEBUG = "FALSE"
