@@ -11,7 +11,7 @@ export async function check_create_auth(request: Request): Promise<string> {
   const hash_int = new Uint8Array(hash).reduce((a, v) => a * 256 + v, 0)
 
   if (hash_int > AUTH_HASH_THRESHOLD) {
-    throw new HttpError(403, 'Invalid Authorisation header, you need to generate a key with a valid hash')
+    throw new HttpError(403, 'Invalid Authorisation header, you need to generate a key with a valid hash: ' + hash_int)
   }
   return auth_key
 }

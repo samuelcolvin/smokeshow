@@ -14,8 +14,7 @@ async function handle(event: FetchEvent) {
       console.warn(exc.message)
       return exc.response()
     }
-    console.error('error handling request:', request)
-    console.error('error:', exc)
+    console.error('error handling request:', request, exc)
     captureException(event, exc)
     const body = debug ? `\nError occurred on the edge:\n\n${exc.message}\n${exc.stack}\n` : 'Edge Server Error'
     return new Response(body, {status: 500})
