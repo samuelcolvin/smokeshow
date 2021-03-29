@@ -7,7 +7,6 @@ install:
 	python3 -m pip install -U setuptools pip wheel
 	pip install -U -r tests/requirements-linting.txt
 	pip install -U -r tests/requirements-testing.txt
-	pip install -e .
 
 .PHONY: format
 format:

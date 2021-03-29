@@ -32,8 +32,17 @@ jobs:
       with:
         node-version: '14.x'
 
-    - run: yarn
-#    - run: yarn test --coverage
+    - name: set up python
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.8'
+
+    - run: make install
+    - run: pip freeze
+    - run: make lint
+    - run: make test
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
   cli-lint:
     runs-on: ubuntu-latest
