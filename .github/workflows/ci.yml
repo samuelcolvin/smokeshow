@@ -37,6 +37,14 @@ jobs:
       with:
         python-version: '3.8'
 
+    - name: download wrangler
+      run: |
+        curl -L https://github.com/cloudflare/wrangler/releases/download/v1.15.0/wrangler-v1.15.0-x86_64-unknown-linux-musl.tar.gz > wrangler.tar.gz
+        tar -xvzf wrangler.tar.gz
+        rm wrangler.tar.gz
+        echo $PATH
+        echo "::add-path::$(pwd)/dist
+
     - run: make install
     - run: pip freeze
     - run: make lint
