@@ -4,7 +4,7 @@ black = black -S -l 120 --target-version py37 tests
 
 .PHONY: install
 install:
-	python3 -m pip install -U setuptools pip wheel
+	pip install -U pip
 	pip install -U -r tests/requirements-linting.txt
 	pip install -U -r tests/requirements-testing.txt
 

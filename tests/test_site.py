@@ -2,10 +2,9 @@ import re
 
 from pytest_cloudflare_worker import TestClient
 from pytest_toolbox.comparison import AnyInt, CloseToNow, RegexStr
-from requests import Session
 
 
-def test_create_site(client: Session):
+def test_create_site(client: TestClient):
     r = client.delete('/testing/storage/')
     assert r.status_code == 200, r.text
 
