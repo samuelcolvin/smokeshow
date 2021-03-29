@@ -1,7 +1,6 @@
 /env/
 /env37/
 /build/
-/.coverage
 /htmlcov/
 *.lock
 *.py[cod]

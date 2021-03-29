@@ -7,9 +7,10 @@ import {
   json_response,
   View,
   site_summary,
+  list_all,
 } from './utils'
 import {check_create_auth, create_random_string, check_upload_auth, sign_auth} from './auth'
-import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL} from './constants'
+import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL, TESTING} from './constants'
 import {create_site_check, new_file_check} from './limits'
 import styles from './index/styles/main.scss'
 import readme from '../README.md'
@@ -181,6 +182,22 @@ export const views: View[] = [
     },
   },
 ]
+
+if (TESTING) {
+  views.push({
+    match: '/testing/storage/',
+    allow: ['GET', 'DELETE'],
+    view: async (request: Request) => {
+      if (request.method == 'DELETE') {
+        const keys = (await list_all('')).map(k => k.name)
+        await Promise.all(keys.map(k => STORAGE.delete(k)))
+        return json_response({keys_deleted: keys.length})
+      } else {
+        return json_response(await list_all(''))
+      }
+    },
+  })
+}
 
 export function smart_referrer_redirect(request: Request, url: URL): string | undefined {
   // magic to redirect requests where a site had a link to a resource assuming it was deploy on route

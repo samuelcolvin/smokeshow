@@ -32,8 +32,26 @@ jobs:
       with:
         node-version: '14.x'
 
-    - run: yarn
-#    - run: yarn test --coverage
+    - name: set up python
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.8'
+
+    - name: download wrangler
+      run: |
+        curl -L https://github.com/cloudflare/wrangler/releases/download/v1.15.0/wrangler-v1.15.0-x86_64-unknown-linux-musl.tar.gz > wrangler.tar.gz
+        tar -xvzf wrangler.tar.gz
+        mkdir -p $HOME/bin
+        mv dist/wrangler $HOME/bin
+        rm -r dist wrangler.tar.gz
+        echo "$HOME/bin" >> $GITHUB_PATH
+
+    - run: make install
+    - run: pip freeze
+    - run: make lint
+    - run: make test
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
   cli-lint:
     runs-on: ubuntu-latest
@@ -49,7 +67,7 @@ jobs:
         working-directory: cli
         run: |
           pip install -U setuptools pip
-          pip install -U -r tests/requirements-linting.txt
+          pip install -U -r ../tests/requirements-linting.txt
           pip install -e .
 
       - run: make lint
@@ -79,7 +97,7 @@ jobs:
         working-directory: cli
         run: |
           pip install -U setuptools pip
-          pip install -U -r tests/requirements-testing.txt
+          pip install -U -r ../tests/requirements-testing.txt
           pip install -e .
       - run: pip freeze
 
