@@ -186,9 +186,16 @@ export const views: View[] = [
 if (TESTING) {
   views.push({
     match: '/testing/storage/',
-    view: async () => {
-      return json_response(await list_all(''))
-    }
+    allow: ['GET', 'DELETE'],
+    view: async (request: Request) => {
+      if (request.method == 'DELETE') {
+        const keys = (await list_all('')).map(k => k.name)
+        await Promise.all(keys.map(k => STORAGE.delete(k)))
+        return json_response({keys_deleted: keys.length})
+      } else {
+        return json_response(await list_all(''))
+      }
+    },
   })
 }
 

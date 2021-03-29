@@ -22,7 +22,7 @@ lint:
 
 .PHONY: test
 test:
-	pytest --cf-auth-client
+	pytest
 
 .PHONY: all
 all: lint test
