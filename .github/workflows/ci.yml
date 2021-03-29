@@ -49,7 +49,7 @@ jobs:
         working-directory: cli
         run: |
           pip install -U setuptools pip
-          pip install -U -r tests/requirements-linting.txt
+          pip install -U -r ../tests/requirements-linting.txt
           pip install -e .
 
       - run: make lint
@@ -79,7 +79,7 @@ jobs:
         working-directory: cli
         run: |
           pip install -U setuptools pip
-          pip install -U -r tests/requirements-testing.txt
+          pip install -U -r ../tests/requirements-testing.txt
           pip install -e .
       - run: pip freeze
 
