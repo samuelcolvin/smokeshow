@@ -94,18 +94,17 @@ async function get_file(request: Request, public_key: string, path: string): Pro
 
   if (!v.value) {
     // check if we have a 404.html or 404.txt file, if so use that and change the status, else throw a generic 404
+    status = 404
     v = await STORAGE.getWithMetadata(`site:${public_key}:/404.html`, 'stream')
     if (!v.value) {
       v = await STORAGE.getWithMetadata(`site:${public_key}:/404.txt`, 'stream')
     }
     if (!v.value) {
       throw new HttpError(404, `File "${path}" not found in site "${public_key}"`)
-    } else {
-      status = 404
     }
   }
 
-  return response_from_cache(v, status)
+  return response_from_cache(v, null, status)
 }
 
 async function post_file(request: Request, public_key: string, path: string): Promise<Response> {
