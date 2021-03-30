@@ -2,8 +2,8 @@
  * Logic related to the actual ephemeral sites, e.g. creating them, then adding files and making get requests
  */
 import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL} from './constants'
-import {HttpError, json_response, response_from_cache, site_summary, RequestExtraInfo} from './utils'
-import {check_create_auth, check_upload_auth, create_random_string, sign_auth} from './auth'
+import {HttpError, json_response, response_from_kv, KVFile, FileMetadata, RequestExtraInfo, list_all} from './utils'
+import {check_create_auth, check_upload_auth, create_random_string, sign_auth, array_to_base64} from './auth'
 import {create_site_check, new_file_check} from './limits'
 
 declare const STORAGE: KVNamespace
@@ -63,10 +63,10 @@ export async function site_request(request: Request, info: RequestExtraInfo): Pr
   }
 }
 
-function* get_index_options(public_key: string, path: string) {
-  yield `site:${public_key}:${path}index.html`
-  yield `site:${public_key}:${path.slice(0, -1)}.html`
-  yield `site:${public_key}:${path}index.json`
+function* get_index_options(path: string) {
+  yield `${path}index.html`
+  yield `${path.slice(0, -1)}.html`
+  yield `${path}index.json`
 }
 
 async function get_file(request: Request, public_key: string, path: string): Promise<Response> {
@@ -74,13 +74,13 @@ async function get_file(request: Request, public_key: string, path: string): Pro
     return json_response(await site_summary(public_key))
   }
 
-  let v = await STORAGE.getWithMetadata(`site:${public_key}:${path}`, 'stream')
+  let v = await get_kv_file(public_key, path)
 
   if (!v.value && path.endsWith('/')) {
-    const index_options = get_index_options(public_key, path)
+    const index_options = get_index_options(path)
     let next
     while (!v.value && !(next = index_options.next()).done) {
-      v = await STORAGE.getWithMetadata(next.value as string, 'stream')
+      v = await get_kv_file(public_key, next.value as string)
     }
 
     if (!v.value && path == '/') {
@@ -95,16 +95,30 @@ async function get_file(request: Request, public_key: string, path: string): Pro
   if (!v.value) {
     // check if we have a 404.html or 404.txt file, if so use that and change the status, else throw a generic 404
     status = 404
-    v = await STORAGE.getWithMetadata(`site:${public_key}:/404.html`, 'stream')
+    v = await get_kv_file(public_key, '404.html')
     if (!v.value) {
-      v = await STORAGE.getWithMetadata(`site:${public_key}:/404.txt`, 'stream')
+      v = await get_kv_file(public_key, '404.txt')
     }
     if (!v.value) {
       throw new HttpError(404, `File "${path}" not found in site "${public_key}"`)
     }
   }
 
-  return response_from_cache(v, null, status)
+  return response_from_kv(v, null, status)
+}
+
+async function get_kv_file(public_key: string, path: string): Promise<KVFile> {
+  const v = await STORAGE.getWithMetadata(`site:${public_key}:${path}`, 'stream')
+  const metadata = (v.metadata as FileMetadata) || {}
+  if (metadata.hash) {
+    // we know this is the new storage mode and the actual file is saved under another key
+    return {
+      value: await STORAGE.get(`file:${metadata.hash}`, 'stream'),
+      metadata,
+    }
+  }
+  // old style storage with file content in the first key, or file not found
+  return {value: v.value, metadata}
 }
 
 async function post_file(request: Request, public_key: string, path: string): Promise<Response> {
@@ -119,10 +133,61 @@ async function post_file(request: Request, public_key: string, path: string): Pr
 
   const total_site_size = await new_file_check(public_key, size)
 
-  await STORAGE.put(`site:${public_key}:${path}`, blob.stream(), {
-    expiration: Math.round((creation_ms + SITE_TTL) / 1000),
-    metadata: {content_type, size},
-  })
+  const data_array = await blob.arrayBuffer()
+  const hash_array = await crypto.subtle.digest('sha-256', data_array)
+  const hash = array_to_base64(new Uint8Array(hash_array))
+
+  const expiration = Math.round((creation_ms + SITE_TTL) / 1000)
+  const metadata = {size, content_type, hash}
+
+  await Promise.all([
+    STORAGE.put(`site:${public_key}:${path}`, '1', {expiration, metadata}),
+    STORAGE.put(`file:${hash}`, data_array, {expiration}),
+  ])
 
   return json_response({path, content_type, size, total_site_size})
+}
+
+// async function create_kv_file(
+//   public_key: string,
+//   path: string,
+//   data: ArrayBuffer,
+//   creation_ms: number,
+//   content_type: string | null,
+// ): Promise<void> {
+//   const hash_array = await crypto.subtle.digest('sha-256', data)
+//   const hash = array_to_base64(new Uint8Array(hash_array))
+//
+//   const expiration = Math.round((creation_ms + SITE_TTL) / 1000)
+//   const metadata = {size: data.byteLength, content_type, hash}
+//
+//   await Promise.all([
+//     STORAGE.put(`site:${public_key}:${path}`, '1', {expiration, metadata}),
+//     STORAGE.put(`file:${hash}`, data, {expiration}),
+//   ])
+// }
+
+// async function site_summary(public_key: string): Promise<Record<string, any>> {
+//   const v = await STORAGE.getWithMetadata(`site:${public_key}:${INFO_FILE_NAME}`, 'json')
+//   const {hash} = v.metadata as FileMetadata
+//   let obj: Record<string, any>
+//   if (hash) {
+//     obj = await STORAGE.get(`file:${hash}`, 'json') as Record<string, any>
+//   } else {
+//     obj = v.value as Record<string, any>
+//   }
+//
+//   const files = await list_all(`site:${public_key}:`)
+//   obj.files = files.map(k => k.name.substr(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)
+//   obj.total_site_size = files.map(k => k.metadata.size).reduce((a, v) => a + v, 0)
+//   return obj
+// }
+
+async function site_summary(public_key: string): Promise<Record<string, any>> {
+  const raw = await STORAGE.get(`site:${public_key}:${INFO_FILE_NAME}`, 'json')
+  const obj = raw as Record<string, any>
+  const files = await list_all(`site:${public_key}:`)
+  obj.files = files.map(k => k.name.substr(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)
+  obj.total_site_size = files.map(k => k.metadata.size).reduce((a, v) => a + v, 0)
+  return obj
 }

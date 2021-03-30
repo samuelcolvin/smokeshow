@@ -111,4 +111,4 @@ async function decode_signed_object(raw_signed: Uint8Array): Promise<UploadAuth>
   return {public_key, creation}
 }
 
-const array_to_base64 = (array: Uint8Array): string => btoa(String.fromCharCode.apply(null, array as any))
+export const array_to_base64 = (array: Uint8Array): string => btoa(String.fromCharCode.apply(null, array as any))

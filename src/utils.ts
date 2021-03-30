@@ -24,7 +24,7 @@ export async function cached_proxy(url: string, content_type: string): Promise<R
 
   const cache_value = await STORAGE.getWithMetadata(cache_key, 'stream')
   if (cache_value.value) {
-    return response_from_cache(cache_value, 3600)
+    return response_from_kv(cache_value as KVFile, 3600)
   }
   console.log(`"${url}" not yet cached, downloading`)
   const r = await fetch(url)
@@ -37,13 +37,19 @@ export async function cached_proxy(url: string, content_type: string): Promise<R
   return simple_response(body, content_type, 3600)
 }
 
-interface CacheValue {
-  value: ReadableStream | null
-  metadata: unknown
+export interface FileMetadata {
+  content_type?: string
+  hash?: string
+  size?: number
 }
 
-export function response_from_cache(cache_value: CacheValue, expires: number | null = null, status = 200): Response {
-  const metadata: {content_type?: string} = (cache_value.metadata as any) || {}
+export interface KVFile {
+  value: ReadableStream | null
+  metadata: FileMetadata | null
+}
+
+export function response_from_kv(cache_value: KVFile, expires: number | null = null, status = 200): Response {
+  const metadata: FileMetadata = cache_value.metadata || {}
   return new Response(cache_value.value, {status, headers: build_headers(metadata.content_type, expires)})
 }
 
@@ -122,13 +128,4 @@ export async function list_all(prefix: string): Promise<KvListItem[]> {
     }
     value = await STORAGE.list({prefix: prefix, cursor: value.cursor})
   }
-}
-
-export async function site_summary(public_key: string): Promise<Record<string, any>> {
-  const raw = await STORAGE.get(`site:${public_key}:${INFO_FILE_NAME}`, 'json')
-  const obj = raw as Record<string, any>
-  const files = await list_all(`site:${public_key}:`)
-  obj.files = files.map(k => k.name.substr(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)
-  obj.total_site_size = files.map(k => k.metadata.size).reduce((a, v) => a + v, 0)
-  return obj
 }
