@@ -118,8 +118,8 @@ def _fix_env():
     setenv.clear()
 
 
-@pytest.fixture(name='client')
-def _fix_client(await_):
+@pytest.fixture(name='async_client')
+def _fix_async_client(await_):
     client = AsyncClient()
     await_(client.__aenter__())
 

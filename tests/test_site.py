@@ -22,12 +22,7 @@ def test_create_site(client: TestClient):
         headers={'authorisation': obj['secret_key'], 'content-type': 'text/html'},
     )
     assert r.status_code == 200, r.text
-    assert r.json() == {
-        'path': '/',
-        'content_type': 'text/html',
-        'size': 23,
-        'total_site_size': 23,
-    }
+    assert r.json() == {'path': '/', 'content_type': 'text/html', 'size': 23, 'total_site_size': 23}
 
     r = client.get(f'/{pk}/')
     assert r.status_code == 200, r.text
@@ -45,6 +40,24 @@ def test_create_site(client: TestClient):
         'total_site_size': 175,
     }
 
+    r = client.get(f'/{pk}/missing.html')
+    assert r.status_code == 404, r.text
+    assert r.headers['content-type'].startswith('text/plain')
+    assert r.text == f'404: File "/missing.html" not found in site "{pk}"'
+
+    r = client.post(
+        f'/{pk}/404.html',
+        data='<h1>Page not found :-(</h1>',
+        headers={'authorisation': obj['secret_key'], 'content-type': 'text/html'},
+    )
+    assert r.status_code == 200, r.text
+    assert r.json() == {'path': '/404.html', 'content_type': 'text/html', 'size': 27, 'total_site_size': 50}
+
+    r = client.get(f'/{pk}/missing.html')
+    assert r.status_code == 404, r.text
+    assert r.headers['content-type'] == 'text/html'
+    assert r.text == '<h1>Page not found :-(</h1>'
+
     r = client.get('/testing/storage/')
     assert r.status_code == 200, r.text
     # debug(r.json())
@@ -55,17 +68,16 @@ def test_create_site(client: TestClient):
         {
             'name': f'site:{pk}:/',
             'expiration': AnyInt(),
-            'metadata': {
-                'content_type': 'text/html',
-                'size': 23,
-            },
+            'metadata': {'content_type': 'text/html', 'size': 23},
         },
         {
             'name': f'site:{pk}:/.smokeshow.json',
             'expiration': AnyInt(),
-            'metadata': {
-                'content_type': 'application/json',
-                'size': AnyInt(),
-            },
+            'metadata': {'content_type': 'application/json', 'size': AnyInt()},
+        },
+        {
+            'name': f'site:{pk}:/404.html',
+            'expiration': AnyInt(),
+            'metadata': {'content_type': 'text/html', 'size': 27},
         },
     ]

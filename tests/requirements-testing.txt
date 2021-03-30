@@ -6,4 +6,4 @@ pytest-cov==2.11.1
 pytest-mock==3.5.1
 pytest-sugar==0.9.4
 pytest-toolbox==0.4
-pytest-cloudflare-worker==0.0.3;python_version>='3.8'
+pytest-cloudflare-worker==0.0.4;python_version=='3.8'

@@ -29,6 +29,10 @@ mypy:
 test:
 	pytest --cov=smokeshow
 
+.PHONY: test-live
+test-live:
+	pytest tests/test_live.py --cf-auth-client --cf-wrangler-dir ..
+
 .PHONY: testcov
 testcov: test
 	@echo "building coverage html"

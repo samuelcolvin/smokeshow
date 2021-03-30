@@ -42,9 +42,9 @@ interface CacheValue {
   metadata: unknown
 }
 
-export function response_from_cache(cache_value: CacheValue, expires: number | null = null): Response {
+export function response_from_cache(cache_value: CacheValue, expires: number | null = null, status = 200): Response {
   const metadata: {content_type?: string} = (cache_value.metadata as any) || {}
-  return new Response(cache_value.value, {headers: build_headers(metadata.content_type, expires)})
+  return new Response(cache_value.value, {status, headers: build_headers(metadata.content_type, expires)})
 }
 
 function build_headers(content_type: string | undefined, expires_in: number | null): Record<string, string> {
