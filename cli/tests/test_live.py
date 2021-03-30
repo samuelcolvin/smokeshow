@@ -1,6 +1,5 @@
 import sys
 from pathlib import Path
-from unittest.mock import AsyncMock
 
 import pytest
 from pytest_toolbox.comparison import AnyInt, CloseToNow, RegexStr
@@ -23,7 +22,7 @@ def test_create_site(client: TestClient, tmp_path: Path, await_, mocker):
             kwargs['data'] = kwargs.pop('content')
         return client.post(*args, **kwargs)
 
-    mocker.patch('smokeshow.main.AsyncClient.post', AsyncMock(side_effect=mock_apost))
+    mocker.patch('smokeshow.main.AsyncClient.post', side_effect=mock_apost)
 
     f = tmp_path / 'index.html'
     f.write_text('<h1>testing index</h1>')
