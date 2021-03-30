@@ -94,11 +94,16 @@ jobs:
           pip install -e .
       - run: pip freeze
 
-      - run: ./tests/gh_install_wrangler.sh
-
       - name: test
         run: make test
         working-directory: cli
+
+      - run: ./tests/gh_install_wrangler.sh
+        if: matrix.os == 'ubuntu' && matrix.python-version == '3.8'
+
+      - run: pytest tests/test_live.py --cf-auth-client --cf-wrangler-dir ..
+        working-directory: cli
+        if: matrix.os == 'ubuntu' && matrix.python-version == '3.8'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 

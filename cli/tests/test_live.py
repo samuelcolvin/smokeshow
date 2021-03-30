@@ -1,8 +1,10 @@
+import sys
 from pathlib import Path
 from unittest.mock import AsyncMock
 
 import pytest
-from pytest_toolbox.comparison import CloseToNow, AnyInt, RegexStr
+from pytest_toolbox.comparison import AnyInt, CloseToNow, RegexStr
+
 from smokeshow import upload
 
 try:
@@ -10,7 +12,8 @@ try:
 except ImportError:
     TestClient = None
 
-pytestmark = pytest.mark.skipif(TestClient is None, reason='pytest-cloudflare-worker not installed')
+skip = TestClient is None or '--cf-auth-client' not in sys.argv
+pytestmark = pytest.mark.skipif(skip, reason='pytest-cloudflare-worker not installed')
 
 
 def test_create_site(client: TestClient, tmp_path: Path, await_, mocker):
