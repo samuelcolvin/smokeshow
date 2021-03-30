@@ -56,6 +56,7 @@ def test_create_get(client: TestClient):
     r = client.get('/testing/storage/')
     assert r.status_code == 200, r.text
     # debug(r.json())
+    # debug(client.inspect_log_wait(wait_time=3))
     assert r.json() == [
         {
             'name': 'file:H4OFKgUZxqnmcsGSJH4+soIyellWXc1Kq5t/fzbuHhQ=',
@@ -74,25 +75,18 @@ def test_create_get(client: TestClient):
             'metadata': {
                 'size': 23,
                 'content_type': 'text/html',
-                'hash': 'H4OFKgUZxqnmcsGSJH4+soIyellWXc1Kq5t/fzbuHhQ='
+                'hash': 'H4OFKgUZxqnmcsGSJH4+soIyellWXc1Kq5t/fzbuHhQ=',
             },
         },
         {
             'name': f'site:{pk}:/.smokeshow.json',
             'expiration': AnyInt(),
-            'metadata': {
-                'content_type': 'application/json',
-                'size': 152
-            },
+            'metadata': {'content_type': 'application/json', 'size': 152},
         },
         {
             'name': f'site:{pk}:/foobar.html',
             'expiration': AnyInt(),
-            'metadata': {
-                'size': 24,
-                'content_type': 'foo/bar',
-                'hash': 'jqfqkZwCywQ/gc9JZlkCIj3pbO7fBy9TTpSVYDCWfio='
-            },
+            'metadata': {'size': 24, 'content_type': 'foo/bar', 'hash': 'jqfqkZwCywQ/gc9JZlkCIj3pbO7fBy9TTpSVYDCWfio='},
         },
     ]
 

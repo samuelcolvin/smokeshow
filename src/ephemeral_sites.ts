@@ -95,9 +95,9 @@ async function get_file(request: Request, public_key: string, path: string): Pro
   if (!v.value) {
     // check if we have a 404.html or 404.txt file, if so use that and change the status, else throw a generic 404
     status = 404
-    v = await get_kv_file(public_key, '404.html')
+    v = await get_kv_file(public_key, '/404.html')
     if (!v.value) {
-      v = await get_kv_file(public_key, '404.txt')
+      v = await get_kv_file(public_key, '/404.txt')
     }
     if (!v.value) {
       throw new HttpError(404, `File "${path}" not found in site "${public_key}"`)
@@ -109,6 +109,7 @@ async function get_file(request: Request, public_key: string, path: string): Pro
 
 async function get_kv_file(public_key: string, path: string): Promise<KVFile> {
   const v = await STORAGE.getWithMetadata(`site:${public_key}:${path}`, 'stream')
+  console.log(`site:${public_key}:${path} -> ${JSON.stringify(v.metadata)}`)
   const metadata = (v.metadata as FileMetadata) || {}
   if (metadata.hash) {
     // we know this is the new storage mode and the actual file is saved under another key
@@ -147,41 +148,6 @@ async function post_file(request: Request, public_key: string, path: string): Pr
 
   return json_response({path, content_type, size, total_site_size})
 }
-
-// async function create_kv_file(
-//   public_key: string,
-//   path: string,
-//   data: ArrayBuffer,
-//   creation_ms: number,
-//   content_type: string | null,
-// ): Promise<void> {
-//   const hash_array = await crypto.subtle.digest('sha-256', data)
-//   const hash = array_to_base64(new Uint8Array(hash_array))
-//
-//   const expiration = Math.round((creation_ms + SITE_TTL) / 1000)
-//   const metadata = {size: data.byteLength, content_type, hash}
-//
-//   await Promise.all([
-//     STORAGE.put(`site:${public_key}:${path}`, '1', {expiration, metadata}),
-//     STORAGE.put(`file:${hash}`, data, {expiration}),
-//   ])
-// }
-
-// async function site_summary(public_key: string): Promise<Record<string, any>> {
-//   const v = await STORAGE.getWithMetadata(`site:${public_key}:${INFO_FILE_NAME}`, 'json')
-//   const {hash} = v.metadata as FileMetadata
-//   let obj: Record<string, any>
-//   if (hash) {
-//     obj = await STORAGE.get(`file:${hash}`, 'json') as Record<string, any>
-//   } else {
-//     obj = v.value as Record<string, any>
-//   }
-//
-//   const files = await list_all(`site:${public_key}:`)
-//   obj.files = files.map(k => k.name.substr(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)
-//   obj.total_site_size = files.map(k => k.metadata.size).reduce((a, v) => a + v, 0)
-//   return obj
-// }
 
 async function site_summary(public_key: string): Promise<Record<string, any>> {
   const raw = await STORAGE.get(`site:${public_key}:${INFO_FILE_NAME}`, 'json')
