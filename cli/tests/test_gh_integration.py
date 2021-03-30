@@ -51,14 +51,14 @@ def test_coverage_not_found(tmp_path):
     assert get_github_status_info(tmp_path, 'test {coverage-percentage}', 1) == ('success', 'test {COVERAGE NOT FOUND}')
 
 
-def test_set_status(env: SetEnv, mocker, dummy_server: DummyServer, await_, client):
+def test_set_status(env: SetEnv, mocker, dummy_server: DummyServer, await_, async_client):
     mocker.patch('smokeshow.main.GITHUB_API_ROOT', dummy_server.server_name + '/github')
 
     env.set('GITHUB_REPOSITORY', 'samuelcolvin/foobar')
     env.set('SMOKESHOW_GITHUB_PR_HEAD_SHA', 'abc1234')
     env.set('SMOKESHOW_GITHUB_TOKEN', 'xxx')
 
-    await_(set_github_commit_status(client, 'https://www.example.com/testing', 'success', 'testing'))
+    await_(set_github_commit_status(async_client, 'https://www.example.com/testing', 'success', 'testing'))
 
     assert dummy_server.app['statuses'] == {
         'repos/samuelcolvin/foobar/statuses/abc1234': {
