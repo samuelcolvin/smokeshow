@@ -35,6 +35,7 @@ def test_create_get(client: TestClient):
     assert r.status_code == 200, r.text
     assert r.text == '<h1>this is a test</h1>'
     assert r.headers['content-type'] == 'text/html'
+    assert 'expires' in r.headers
 
     r = client.get(f'/{pk}/.smokeshow.json')
     assert r.status_code == 200, r.text

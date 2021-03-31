@@ -74,52 +74,56 @@ async function get_file(request: Request, public_key: string, path: string): Pro
     return json_response(await site_summary(public_key))
   }
 
-  let v = await get_kv_file(public_key, path)
+  let kv_file = await get_kv_file(public_key, path)
 
-  if (!v.value && path.endsWith('/')) {
+  if (!kv_file && path.endsWith('/')) {
     const index_options = get_index_options(path)
     let next
-    while (!v.value && !(next = index_options.next()).done) {
-      v = await get_kv_file(public_key, next.value as string)
-    }
-
-    if (!v.value && path == '/') {
-      return json_response({
-        message: `The site "${public_key}" has no index file, hence this summary response`,
-        summary: await site_summary(public_key),
-      })
+    while (!kv_file && !(next = index_options.next()).done) {
+      kv_file = await get_kv_file(public_key, next.value as string)
     }
   }
+
+  if (!kv_file && path == '/') {
+    return json_response({
+      message: `The site "${public_key}" has no index file, hence this summary response`,
+      summary: await site_summary(public_key),
+    })
+  }
+
   let status = 200
 
-  if (!v.value) {
+  if (!kv_file) {
     // check if we have a 404.html or 404.txt file, if so use that and change the status, else throw a generic 404
     status = 404
-    v = await get_kv_file(public_key, '/404.html')
-    if (!v.value) {
-      v = await get_kv_file(public_key, '/404.txt')
+    kv_file = await get_kv_file(public_key, '/404.html')
+    if (!kv_file) {
+      kv_file = await get_kv_file(public_key, '/404.txt')
     }
-    if (!v.value) {
+    if (!kv_file) {
       throw new HttpError(404, `File "${path}" not found in site "${public_key}"`)
     }
   }
 
-  return response_from_kv(v, null, status)
+  return response_from_kv(kv_file, 3600, status)
 }
 
-async function get_kv_file(public_key: string, path: string): Promise<KVFile> {
+async function get_kv_file(public_key: string, path: string): Promise<KVFile | null> {
   const v = await STORAGE.getWithMetadata(`site:${public_key}:${path}`, 'stream')
   console.log(`site:${public_key}:${path} -> ${JSON.stringify(v.metadata)}`)
   const metadata = (v.metadata as FileMetadata) || {}
   if (metadata.hash) {
     // we know this is the new storage mode and the actual file is saved under another key
     return {
-      value: await STORAGE.get(`file:${metadata.hash}`, 'stream'),
+      value: await STORAGE.get(`file:${metadata.hash}`, 'stream') as ReadableStream,
       metadata,
     }
+  } else if (v.value) {
+    // old style storage with file content in the first key
+    return {value: v.value, metadata}
+  } else {
+    return null
   }
-  // old style storage with file content in the first key, or file not found
-  return {value: v.value, metadata}
 }
 
 async function post_file(request: Request, public_key: string, path: string): Promise<Response> {
@@ -150,8 +154,7 @@ async function post_file(request: Request, public_key: string, path: string): Pr
 }
 
 async function site_summary(public_key: string): Promise<Record<string, any>> {
-  const raw = await STORAGE.get(`site:${public_key}:${INFO_FILE_NAME}`, 'json')
-  const obj = raw as Record<string, any>
+  const obj = (await STORAGE.get(`site:${public_key}:${INFO_FILE_NAME}`, 'json')) as Record<string, any>
   const files = await list_all(`site:${public_key}:`)
   obj.files = files.map(k => k.name.substr(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)
   obj.total_site_size = files.map(k => k.metadata.size).reduce((a, v) => a + v, 0)

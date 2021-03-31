@@ -42,14 +42,12 @@ export interface FileMetadata {
 }
 
 export interface KVFile {
-  value: ReadableStream | null
-  metadata: FileMetadata | null
+  value: ReadableStream
+  metadata: FileMetadata
 }
 
-export function response_from_kv(cache_value: KVFile, expires: number | null = null, status = 200): Response {
-  const metadata: FileMetadata = cache_value.metadata || {}
-  return new Response(cache_value.value, {status, headers: build_headers(metadata.content_type, expires)})
-}
+export const response_from_kv = (cache_value: KVFile, expires: number | null = null, status = 200): Response =>
+  new Response(cache_value.value, {status, headers: build_headers(cache_value.metadata.content_type, expires)})
 
 function build_headers(content_type: string | undefined, expires_in: number | null): Record<string, string> {
   const headers: Record<string, string> = {}
