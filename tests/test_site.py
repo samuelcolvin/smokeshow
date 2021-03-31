@@ -203,7 +203,6 @@ def test_duplicate_file(client: TestClient):
 
     r = client.get('/testing/storage/', params={'prefix': f'site:{pk2}'})
     assert r.status_code == 200, r.text
-    debug(r.json(), expiration2)
     assert r.json() == {
         f'site:{pk2}:/.smokeshow.json': {
             'value': RegexStr(fr'\{{\n  "url": "https://example.com/{pk2}/",\n.*'),
