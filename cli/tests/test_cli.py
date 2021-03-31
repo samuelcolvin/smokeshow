@@ -1,6 +1,7 @@
 import sys
 
 import pytest
+from pytest_toolbox.comparison import RegexStr
 from typer.testing import CliRunner
 
 from smokeshow.main import cli
@@ -11,7 +12,7 @@ runner = CliRunner()
 def test_help():
     result = runner.invoke(cli, ['--help'])
     assert result.exit_code == 0
-    assert 'smokeshow CLI, see https://smokeshow.helpmanual.io for more information.\n' in result.stdout
+    assert result.stdout == RegexStr(r'.*smokeshow CLI v\d\.[\d.]+, see https://smokeshow\.helpmanual\.io for.*')
 
 
 def test_generate_key(mocker):

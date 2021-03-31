@@ -19,7 +19,9 @@ USER_AGENT = f'smokeshow-cli-v{VERSION}'
 KEY_HASH_THRESHOLD_POW = 234
 KEY_HASH_THRESHOLD = 2 ** KEY_HASH_THRESHOLD_POW
 ROOT_URL = 'https://smokeshow.helpmanual.io'
-cli = Typer(name='smokeshow', help='smokeshow CLI, see https://smokeshow.helpmanual.io for more information.')
+cli = Typer(
+    name='smokeshow', help=f'smokeshow CLI v{VERSION}, see https://smokeshow.helpmanual.io for more information.'
+)
 
 
 @cli.command(help='Generate a new upload key')
