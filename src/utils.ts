@@ -1,5 +1,3 @@
-import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH} from './constants'
-
 declare const DEBUG: string | undefined
 declare const STORAGE: KVNamespace
 
