@@ -62,13 +62,20 @@ if (TESTING) {
   views.push({
     match: '/testing/storage/',
     allow: ['GET', 'DELETE'],
-    view: async (request: Request) => {
+    view: async (request, info) => {
+      const prefix = info.url.searchParams.get('prefix') || ''
+      const files = await list_all(prefix)
       if (request.method == 'DELETE') {
-        const keys = (await list_all('')).map(k => k.name)
-        await Promise.all(keys.map(k => STORAGE.delete(k)))
-        return json_response({keys_deleted: keys.length})
+        await Promise.all(files.map(f => STORAGE.delete(f.name)))
+        return json_response({keys_deleted: files.length})
       } else {
-        return json_response(await list_all(''))
+        const entries = await Promise.all(
+          files.map(async f => {
+            const {value, metadata} = await STORAGE.getWithMetadata(f.name, 'text')
+            return [f.name, {value, metadata, expiration: f.expiration}]
+          }),
+        )
+        return json_response(Object.fromEntries(entries))
       }
     },
   })
