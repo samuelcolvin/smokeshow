@@ -91,12 +91,12 @@ def test_create_get(client: TestClient):
     obj = r.json()
     assert obj['file:H4OFKgUZxqnmcsGSJH4+soIyellWXc1Kq5t/fzbuHhQ='] == {
         'value': '<h1>this is a test</h1>',
-        'metadata': None,
+        'metadata': {'path': '/', 'public_key': pk},
         'expiration': expiration,
     }
     assert obj['file:jqfqkZwCywQ/gc9JZlkCIj3pbO7fBy9TTpSVYDCWfio='] == {
         'value': '<h1>this is my page</h1>',
-        'metadata': None,
+        'metadata': {'path': '/foobar.html', 'public_key': pk},
         'expiration': expiration,
     }
 
@@ -221,7 +221,7 @@ def test_duplicate_file(client: TestClient):
     assert r.json() == {
         'file:WIFwflSwES+QG8g6H/usrI+rdOpGpvcGo+/F99TBxiU=': {
             'value': 'this is a test file',
-            'metadata': None,
+            'metadata': {'path': '/different.file', 'public_key': pk2},
             'expiration': expiration2,
         }
     }

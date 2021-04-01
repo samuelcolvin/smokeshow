@@ -143,7 +143,7 @@ async function post_file(request: Request, public_key: string, path: string): Pr
 
   await Promise.all([
     STORAGE.put(`site:${public_key}:${path}`, '1', {expiration, metadata}),
-    STORAGE.put(`file:${hash}`, data_array, {expiration}),
+    STORAGE.put(`file:${hash}`, data_array, {expiration, metadata: {public_key, path}}),
   ])
 
   return json_response({path, content_type, size, total_site_size})
