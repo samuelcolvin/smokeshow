@@ -15,7 +15,7 @@ export async function create_site_check(
 
   if (recent_sites == null) {
     // too many site created in the last 24 hours
-    throw new HttpError(429, `You've exceeded the 24h creation limit of ${SITES_PER_DAY} sites.`)
+    throw new HttpError(429, `You've exceeded the site creation limit of ${SITES_PER_DAY} sites.`)
   }
   return recent_sites as number
 }
