@@ -2,11 +2,11 @@ type Props = Record<string, any>
 type Component = (props: Props) => Element
 
 interface Element {
-  el: string | Component
+  el: string | Component | typeof Fragment
   props: Props
 }
 
-export function jsx(el: string | Component, props: Props): Element {
+export function jsx(el: string | Component | typeof Fragment, props: Props): Element {
   return {el, props}
 }
 
@@ -42,24 +42,20 @@ async function render_element(child: any): Promise<string> {
     return child
   } else if (child_type == SmartType.Object && 'el' in child && 'props' in child) {
     return await jsxs(child.el, child.props)
-  } else if (child_type == SmartType.Object && '__async_ref__' in child) {
-    const prom = child.__async_ref__ as Promise<any>
-    return await render_element(await prom)
+  } else if (child instanceof AsyncRef) {
+    return await render_element(await child.get_result())
   } else if (child_type == SmartType.Array) {
     let result = ''
     for (const item of (child as any[])) {
       result += await render_element(item)
     }
     return result
-  } else if (child_type == SmartType.Promise) {
-    const prom = child as Promise<string>
-    return await prom
   } else {
     return JSON.stringify(child)
   }
 }
 
-export async function jsxs(el: string | Component, props: Props): Promise<string> {
+export async function jsxs(el: string | Component | typeof Fragment, props: Props): Promise<string> {
   // console.log('jsxs:', {el, props})
   if (typeof el == 'string') {
     let children = ''
@@ -75,7 +71,41 @@ export async function jsxs(el: string | Component, props: Props): Promise<string
       }
     }
     return `<${el}${attrs}>${children}</${el}>`
+  } else if (el == Fragment) {
+    return await render_element(props.children)
   } else {
-    return await render_element(el(props))
+    const f = el as any
+    const result = f(props)
+    if (smart_typeof(result) == SmartType.Promise) {
+      return await result
+    } else {
+      return await render_element(result)
+    }
   }
+}
+
+export class Fragment {
+}
+
+class AsyncRef<T> {
+  private readonly prom: Promise<T>
+  private result?: T
+  private got_result = false
+
+  constructor(prom: Promise<T>) {
+    this.prom = prom
+  }
+
+  async get_result(): Promise<T> {
+    if (!this.got_result) {
+      this.result = await this.prom
+      this.got_result = true
+    }
+    return this.result as T
+  }
+}
+
+export function async_ref<T>(prom: Promise<T>): T {
+  const p: any = new AsyncRef(prom)
+  return p as T
 }

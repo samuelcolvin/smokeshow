@@ -1,4 +1,5 @@
 import {simple_response} from './utils'
+import {async_ref} from '../react/jsx-runtime'
 
 
 async function render_jsx(raw: any): Promise<string> {
@@ -20,17 +21,15 @@ async function get_thing(x: number): Promise<number> {
 }
 
 
-interface AsyncRef<T> {
-  __async_ref__: Promise<T>
-}
-
-function async_ref<T>(v: Promise<T>): AsyncRef<T> {
-  return {__async_ref__: v}
-}
 
 function DoWait({x}: {x: number}) {
   const answer = async_ref(get_thing(x))
-  return <div>answer: {answer}</div>
+  return (
+    <>
+      <div>answer: {answer}</div>
+      <Foobar thing={answer}/>
+    </>
+  )
 }
 
 const HasInner = ({children}: {children: JSX.Element}) => {
@@ -45,7 +44,7 @@ function foobar() {
       <HasInner>
         <b>the kids</b>
       </HasInner>
-      <DoWait x={5}/>
+      <DoWait x={50}/>
     </div>
   )
 }
