@@ -30,7 +30,7 @@ async function route(event: FetchEvent) {
   if (redirect_url) {
     return Response.redirect(redirect_url, 307)
   }
-
+  console.log('cleaned_path:', cleaned_path)
   for (const view of views) {
     let match
     if (typeof view.match == 'string') {

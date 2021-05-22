@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "outDir": "./dist",
+    "jsx": "react-jsx",
     "module": "commonjs",
     "target": "esnext",
     "lib": ["esnext", "webworker"],
@@ -10,12 +11,13 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "esModuleInterop": true,
-    "types": ["@cloudflare/workers-types"]
+    "types": ["@cloudflare/workers-types", "@types/react"]
   },
   "include": [
-    "./src/*.ts",
     "./src/**/*.ts",
-    "./node_modules/@cloudflare/workers-types/index.d.ts"
+    "./src/**/*.tsx",
+    "./react/*.ts",
+    "./react/react.d.ts"
   ],
   "exclude": ["node_modules/", "dist/"]
 }

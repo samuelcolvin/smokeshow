@@ -7,6 +7,8 @@ import github_svg from '!raw-loader!./index/github.svg'
 import moon_svg from '!raw-loader!./index/moon.svg'
 import index_html from '!raw-loader!./index/index.html'
 
+import experiment from './experiment'
+
 export const site_path_regex = new RegExp(`^\\/([a-z0-9]{${PUBLIC_KEY_LENGTH}})(\\/.*)`)
 
 declare const STORAGE: KVNamespace
@@ -23,6 +25,10 @@ export const views: View[] = [
   {
     match: '/',
     view: async () => simple_response(index_html_final, 'text/html', 3600),
+  },
+  {
+    match: '/experiment/',
+    view: async () => experiment(),
   },
   {
     match: '/favicon.ico',
