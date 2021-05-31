@@ -84,8 +84,7 @@ export async function jsxs(el: string | Component | typeof Fragment, props: Prop
   }
 }
 
-export class Fragment {
-}
+export class Fragment {}
 
 class AsyncRef<T> {
   private readonly prom: Promise<T>

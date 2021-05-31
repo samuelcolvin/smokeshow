@@ -2,6 +2,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "jsx": "react-jsx",
+    "jsxImportSource": "./jsx",
     "module": "commonjs",
     "target": "esnext",
     "lib": ["esnext", "webworker"],
@@ -16,8 +17,7 @@
   "include": [
     "./src/**/*.ts",
     "./src/**/*.tsx",
-    "./react/*.ts",
-    "./react/react.d.ts"
+    "./react/*.ts"
   ],
   "exclude": ["node_modules/", "dist/"]
 }

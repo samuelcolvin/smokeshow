@@ -1,13 +1,11 @@
 import {simple_response} from './utils'
-import {async_ref} from '../react/jsx-runtime'
-
+import {async_ref} from './jsx/jsx-runtime'
 
 async function render_jsx(raw: any): Promise<string> {
   // console.log('raw:', raw)
   const prom = raw as Promise<string>
   return await prom
 }
-
 
 const Foobar = ({thing}: {thing: number}) => <span>Number: {thing}</span>
 
@@ -19,8 +17,6 @@ async function get_thing(x: number): Promise<number> {
   await sleep(x)
   return 42
 }
-
-
 
 function DoWait({x}: {x: number}) {
   const answer = async_ref(get_thing(x))
