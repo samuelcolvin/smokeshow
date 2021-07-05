@@ -225,3 +225,10 @@ def test_duplicate_file(client: TestClient):
             'expiration': expiration2,
         }
     }
+
+
+def test_site_not_found(client: TestClient):
+    r = client.get('/0123456789abcdefghij/')
+    assert r.status_code == 404, r.text
+    assert r.text == '404: Site "0123456789abcdefghij" not found'
+    assert r.headers['content-type'] == 'text/plain;charset=UTF-8'

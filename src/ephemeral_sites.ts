@@ -151,6 +151,9 @@ async function post_file(request: Request, public_key: string, path: string): Pr
 
 async function site_summary(public_key: string): Promise<Record<string, any>> {
   const raw = await STORAGE.get(`site:${public_key}:${INFO_FILE_NAME}`, 'json')
+  if (!raw) {
+    throw new HttpError(404, `Site "${public_key}" not found`)
+  }
   const obj = raw as Record<string, any>
   const files = await list_all(`site:${public_key}:`)
   obj.files = files.map(k => k.name.substr(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)
