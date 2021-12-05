@@ -6,3 +6,4 @@ node_modules/
 /site/
 .coverage
 *.py[cod]
+/env/

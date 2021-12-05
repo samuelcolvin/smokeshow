@@ -17,7 +17,7 @@ If you need to do any of the following:
 * 🙈 view the HTML version of coverage reports
 * 👀 create a quick website to show someone something
 
-_smokeshow_ is here to help. It lets you create a static website, 30 days after the site is created, it vanishes
+_smokeshow_ is here to help. It lets you create a static website, 1 year after the site is created, it vanishes
 like smoke in the wind.
 
 What's great about _smokeshow_:

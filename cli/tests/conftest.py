@@ -20,7 +20,7 @@ async def create(request: Request):
             'message': 'New site created successfully',
             'secret_key': 'testing',
             'site_creation': now.isoformat(),
-            'site_expiration': (now + timedelta(days=30)).isoformat(),
+            'site_expiration': (now + timedelta(days=365)).isoformat(),
             'sites_created_24h': 0,
             'upload_expiration': (now + timedelta(hours=1)).isoformat(),
             'url': f'http://{host}/testing-site/',
