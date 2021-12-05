@@ -1,3 +1,5 @@
+import {SITE_TTL} from './constants'
+
 declare const DEBUG: string | undefined
 declare const STORAGE: KVNamespace
 
@@ -31,7 +33,7 @@ export async function cached_proxy(url: string, content_type: string): Promise<R
   }
   const blob = await r.blob()
   const body = await blob.arrayBuffer()
-  await STORAGE.put(cache_key, body, {expirationTtl: 3600 * 24 * 30, metadata: {content_type}})
+  await STORAGE.put(cache_key, body, {expirationTtl: SITE_TTL / 1000, metadata: {content_type}})
   return simple_response(body, content_type, 3600)
 }
 
