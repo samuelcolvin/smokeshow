@@ -8,7 +8,7 @@ from mimetypes import guess_type
 from pathlib import Path
 from typing import Optional, Tuple, Union, cast
 
-from httpx import AsyncClient
+from httpx import AsyncClient, AsyncHTTPTransport, HTTPError
 from typer import Argument, Exit, Option, Typer
 
 from .version import VERSION
@@ -19,6 +19,9 @@ USER_AGENT = f'smokeshow-cli-v{VERSION}'
 KEY_HASH_THRESHOLD_POW = 234
 KEY_HASH_THRESHOLD = 2 ** KEY_HASH_THRESHOLD_POW
 ROOT_URL = 'https://smokeshow.helpmanual.io'
+HTTPX_TIMEOUT = 30  # seconds
+REQUEST_RETRIES = 3
+
 cli = Typer(
     name='smokeshow', help=f'smokeshow CLI v{VERSION}, see https://smokeshow.helpmanual.io for more information.'
 )
@@ -67,6 +70,37 @@ def cli_upload(
         raise Exit(1)
 
 
+async def upload_file(
+    client: AsyncClient, secret_key: str, upload_root: str, file_path: Path, rel_path: Union[Path, str]
+) -> int:
+    """
+    Raises:
+        ValueError:
+            - If the connecting to the host fails or the post request fails in any other way.
+            - If the post request yields any other response code than 200
+    """
+    url_path = str(rel_path)
+    headers = {'Authorisation': secret_key, 'User-Agent': USER_AGENT}
+    ct = get_content_type(url_path)
+    if ct:
+        headers['Content-Type'] = ct
+    try:
+        r2 = await client.post(
+            upload_root + url_path, content=file_path.read_bytes(), headers=headers, timeout=HTTPX_TIMEOUT
+        )
+    except HTTPError as err:
+        print(f'    ERROR! Uploading file {file_path} to {url_path} failed with error: {err}')
+        raise ValueError(f'Error uploading file {file_path}')
+
+    if r2.status_code == 200:
+        upload_info = r2.json()
+        print(f'    {url_path} ct={ct} size={fmt_size(upload_info["size"])}')
+        return cast(int, upload_info['total_site_size'])
+    else:
+        print(f'    ERROR! {url_path} status={r2.status_code} response={r2.text}')
+        raise ValueError(f'invalid response from "{url_path}" status={r2.status_code} response={r2.text}')
+
+
 async def upload(
     root_path: Path,
     *,
@@ -81,8 +115,14 @@ async def upload(
     else:
         auth_key_use = auth_key
 
-    async with AsyncClient(timeout=30) as client:
-        r = await client.post(root_url + '/create/', headers={'Authorisation': auth_key_use, 'User-Agent': USER_AGENT})
+    transport = AsyncHTTPTransport(retries=REQUEST_RETRIES)
+    async with AsyncClient(timeout=HTTPX_TIMEOUT, transport=transport) as client:
+        try:
+            r = await client.post(
+                root_url + '/create/', headers={'Authorisation': auth_key_use, 'User-Agent': USER_AGENT}
+            )
+        except HTTPError as err:
+            raise ValueError(f'Error creating ephemeral site {err}')
         if r.status_code != 200:
             raise ValueError(f'Error creating ephemeral site {r.status_code}, response:\n{r.text}')
 
@@ -95,29 +135,33 @@ async def upload(
         if not upload_root.startswith(root_url):
             upload_root = re.sub('^https?://[^/]+', root_url, upload_root)
 
-        async def upload_file(file_path: Path, rel_path: Union[Path, str]) -> int:
-            url_path = str(rel_path)
-            headers = {'Authorisation': secret_key, 'User-Agent': USER_AGENT}
-            ct = get_content_type(url_path)
-            if ct:
-                headers['Content-Type'] = ct
-            r2 = await client.post(upload_root + url_path, content=file_path.read_bytes(), headers=headers)
-            if r2.status_code == 200:
-                upload_info = r2.json()
-                print(f'    {url_path} ct={ct} size={fmt_size(upload_info["size"])}')
-                return cast(int, upload_info['total_site_size'])
-            else:
-                print(f'    ERROR! {url_path} status={r2.status_code} response={r2.text}')
-                raise ValueError(f'invalid response from "{url_path}" status={r2.status_code} response={r2.text}')
-
         if root_path.is_dir():
-            coros = [upload_file(p, p.relative_to(root_path)) for p in root_path.glob('**/*') if p.is_file()]
-            print(f'Site created with root {upload_root}\nuploading {len(coros)} files...')
-            total_size = max(await asyncio.gather(*coros))
+            tasks = []
+            for p in root_path.glob('**/*'):
+                if not p.is_file():
+                    continue
+                task = asyncio.create_task(upload_file(client, secret_key, upload_root, p, p.relative_to(root_path)))
+                tasks.append(task)
+
+            # coros = [
+            #     upload_file(client, secret_key, upload_root, p, p.relative_to(root_path))
+            #     for p in root_path.glob('**/*')
+            #     if p.is_file()
+            # ]
+            print(f'Site created with root {upload_root}\nuploading {len(tasks)} files...')
+            # if an error occurs other tasks will still be executed which does not make much sense here so better
+            # cancel them explicitly
+            try:
+                results = await asyncio.gather(*tasks)
+            except ValueError:
+                for task in tasks:
+                    task.cancel()
+                raise
+            total_size = max(results)
         else:
             # root_path is a file
             print(f'Site created with root {upload_root}\nuploading 1 file...')
-            total_size = await upload_file(root_path, root_path.name)
+            total_size = await upload_file(client, secret_key, upload_root, root_path, root_path.name)
 
         print(f'upload complete ✓ site size {fmt_size(total_size)}')
         print('go to', upload_root)
