@@ -143,11 +143,6 @@ async def upload(
                 task = asyncio.create_task(upload_file(client, secret_key, upload_root, p, p.relative_to(root_path)))
                 tasks.append(task)
 
-            # coros = [
-            #     upload_file(client, secret_key, upload_root, p, p.relative_to(root_path))
-            #     for p in root_path.glob('**/*')
-            #     if p.is_file()
-            # ]
             print(f'Site created with root {upload_root}\nuploading {len(tasks)} files...')
             # if an error occurs other tasks will still be executed which does not make much sense here so better
             # cancel them explicitly
