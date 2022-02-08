@@ -48,7 +48,7 @@ def test_upload_dir(tmp_path, dummy_server: DummyServer, await_):
 
 def test_upload_dir_error(tmp_path, dummy_server: DummyServer, await_, mocker):
     mocker_upload = mocker.patch(
-        'smokeshow.main.upload_file', side_effect=ValueError('intentional error testing upload')
+        'smokeshow.main._upload_file', side_effect=ValueError('intentional error testing upload')
     )
     (tmp_path / 'index.html').write_text('<h1>testing</h1>')
     (tmp_path / 'foo.js.map').write_text('{"x": 123}')

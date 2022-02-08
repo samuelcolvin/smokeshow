@@ -6,7 +6,7 @@ import re
 import sys
 from mimetypes import guess_type
 from pathlib import Path
-from typing import Optional, Tuple, Union, cast
+from typing import List, Optional, Tuple, Union, cast, Awaitable
 
 from httpx import AsyncClient, AsyncHTTPTransport, HTTPError
 from typer import Argument, Exit, Option, Typer
@@ -19,7 +19,8 @@ USER_AGENT = f'smokeshow-cli-v{VERSION}'
 KEY_HASH_THRESHOLD_POW = 234
 KEY_HASH_THRESHOLD = 2 ** KEY_HASH_THRESHOLD_POW
 ROOT_URL = 'https://smokeshow.helpmanual.io'
-HTTPX_TIMEOUT = 30  # seconds
+DEFAULT_TIMEOUT = 30  # seconds
+UPLOAD_FILE_TIMEOUT = 300  # seconds
 REQUEST_RETRIES = 3
 
 cli = Typer(
@@ -70,37 +71,6 @@ def cli_upload(
         raise Exit(1)
 
 
-async def upload_file(
-    client: AsyncClient, secret_key: str, upload_root: str, file_path: Path, rel_path: Union[Path, str]
-) -> int:
-    """
-    Raises:
-        ValueError:
-            - If the connecting to the host fails or the post request fails in any other way.
-            - If the post request yields any other response code than 200
-    """
-    url_path = str(rel_path)
-    headers = {'Authorisation': secret_key, 'User-Agent': USER_AGENT}
-    ct = get_content_type(url_path)
-    if ct:
-        headers['Content-Type'] = ct
-    try:
-        r2 = await client.post(
-            upload_root + url_path, content=file_path.read_bytes(), headers=headers, timeout=HTTPX_TIMEOUT
-        )
-    except HTTPError as err:
-        print(f'    ERROR! Uploading file {file_path} to {url_path} failed with error: {err}')
-        raise ValueError(f'Error uploading file {file_path}')
-
-    if r2.status_code == 200:
-        upload_info = r2.json()
-        print(f'    {url_path} ct={ct} size={fmt_size(upload_info["size"])}')
-        return cast(int, upload_info['total_site_size'])
-    else:
-        print(f'    ERROR! {url_path} status={r2.status_code} response={r2.text}')
-        raise ValueError(f'invalid response from "{url_path}" status={r2.status_code} response={r2.text}')
-
-
 async def upload(
     root_path: Path,
     *,
@@ -116,7 +86,7 @@ async def upload(
         auth_key_use = auth_key
 
     transport = AsyncHTTPTransport(retries=REQUEST_RETRIES)
-    async with AsyncClient(timeout=HTTPX_TIMEOUT, transport=transport) as client:
+    async with AsyncClient(timeout=DEFAULT_TIMEOUT, transport=transport) as client:
         try:
             r = await client.post(
                 root_url + '/create/', headers={'Authorisation': auth_key_use, 'User-Agent': USER_AGENT}
@@ -140,7 +110,7 @@ async def upload(
             for p in root_path.glob('**/*'):
                 if not p.is_file():
                     continue
-                task = asyncio.create_task(upload_file(client, secret_key, upload_root, p, p.relative_to(root_path)))
+                task = asyncio.create_task(_upload_file(client, secret_key, upload_root, p, p.relative_to(root_path)))
                 tasks.append(task)
 
             print(f'Site created with root {upload_root}\nuploading {len(tasks)} files...')
@@ -149,14 +119,13 @@ async def upload(
             try:
                 results = await asyncio.gather(*tasks)
             except ValueError:
-                for task in tasks:
-                    task.cancel()
+                await _handle_tasks(tasks)
                 raise
             total_size = max(results)
         else:
             # root_path is a file
             print(f'Site created with root {upload_root}\nuploading 1 file...')
-            total_size = await upload_file(client, secret_key, upload_root, root_path, root_path.name)
+            total_size = await _upload_file(client, secret_key, upload_root, root_path, root_path.name)
 
         print(f'upload complete ✓ site size {fmt_size(total_size)}')
         print('go to', upload_root)
@@ -165,6 +134,49 @@ async def upload(
             await set_github_commit_status(client, upload_root, state, description)
 
     return upload_root
+
+
+async def _handle_tasks(tasks: List[asyncio.Task[int]]) -> None:
+    """cancel all tasks and ignore all exceptions along the way"""
+    for task in tasks:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+        except Exception:
+            pass
+
+
+async def _upload_file(
+    client: AsyncClient, secret_key: str, upload_root: str, file_path: Path, rel_path: Union[Path, str]
+) -> int:
+    """
+    Raises:
+        ValueError:
+            - If the connecting to the host fails or the post request fails in any other way.
+            - If the post request yields any other response code than 200
+    """
+    url_path = str(rel_path)
+    headers = {'Authorisation': secret_key, 'User-Agent': USER_AGENT}
+    ct = get_content_type(url_path)
+    if ct:
+        headers['Content-Type'] = ct
+    try:
+        r2 = await client.post(
+            upload_root + url_path, content=file_path.read_bytes(), headers=headers, timeout=UPLOAD_FILE_TIMEOUT
+        )
+    except HTTPError:
+        print(f'    ERROR! Error uploading file {file_path}')
+        raise ValueError(f'Uploading {url_path} failed due to a network error')
+
+    if r2.status_code == 200:
+        upload_info = r2.json()
+        print(f'    {url_path} ct={ct} size={fmt_size(upload_info["size"])}')
+        return cast(int, upload_info['total_site_size'])
+    else:
+        print(f'    ERROR! {url_path} status={r2.status_code} response={r2.text}')
+        raise ValueError(f'invalid response from "{url_path}" status={r2.status_code} response={r2.text}')
 
 
 def get_content_type(url: str) -> Optional[str]:
