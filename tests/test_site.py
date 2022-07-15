@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from time import sleep
 
 from pytest_cloudflare_worker import TestClient
-from pytest_toolbox.comparison import AnyInt, CloseToNow, RegexStr
+from dirty_equals import IsInt, IsStr, IsNow
 
 
 def test_create_get(client: TestClient):
@@ -16,9 +16,9 @@ def test_create_get(client: TestClient):
     # debug(obj)
     assert obj['message'] == 'New site created successfully'
     assert obj['url'].startswith('https://example.com/')
-    assert obj['site_creation'] == RegexStr(r'20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z')
+    assert obj['site_creation'] == IsStr(regex=r'20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z')
     site_creation = datetime.fromisoformat(obj['site_creation'][:-1]).replace(tzinfo=timezone.utc)
-    assert site_creation == CloseToNow()
+    assert site_creation == IsNow(tz='utc')
     site_expiration = datetime.fromisoformat(obj['site_expiration'][:-1]).replace(tzinfo=timezone.utc)
     assert site_expiration - site_creation == timedelta(seconds=90)
     pk = re.sub(r'^https://example\.com/', '', obj['url']).strip('/')
@@ -40,8 +40,10 @@ def test_create_get(client: TestClient):
     assert r.status_code == 200, r.text
     assert r.json() == {
         'url': f'https://example.com/{pk}/',
-        'site_creation': CloseToNow(delta=10),
-        'site_expiration': RegexStr(r'20\d\d-\d\d-\d\dT.+'),
+        # https://github.com/samuelcolvin/dirty-equals/issues/48
+        # 'site_creation': IsNow(delta=10, tz='utc', format_string='%Y-%m-%dT%H:%M:%S.%fZ', enforce_tz=False),
+        'site_creation': IsStr(regex=r'\d{4}-.+'),
+        'site_expiration': IsStr(regex=r'20\d\d-\d\d-\d\dT.+'),
         'files': ['/'],
         'total_site_size': 175,
     }
@@ -63,7 +65,7 @@ def test_create_get(client: TestClient):
     expiration = int(round(site_expiration.replace(tzinfo=timezone.utc).timestamp()))
     r = client.get('/testing/storage/', params={'prefix': f'site:{pk}'})
     assert r.status_code == 200, r.text
-    # debug(r.json())
+    debug(r.json())
     # debug(client.inspect_log_wait(wait_time=3))
     assert r.json() == {
         f'site:{pk}:/': {
@@ -72,17 +74,23 @@ def test_create_get(client: TestClient):
                 'size': 23,
                 'content_type': 'text/html',
                 'hash': 'H4OFKgUZxqnmcsGSJH4+soIyellWXc1Kq5t/fzbuHhQ=',
+                'extra_headers': [],
             },
             'expiration': expiration,
         },
         f'site:{pk}:/.smokeshow.json': {
-            'value': RegexStr('{.+}'),
-            'metadata': {'content_type': 'application/json', 'size': AnyInt()},
+            'value': IsStr(regex='{.+}', regex_flags=re.S),
+            'metadata': {'content_type': 'application/json', 'size': IsInt()},
             'expiration': expiration,
         },
         f'site:{pk}:/foobar.html': {
             'value': '1',
-            'metadata': {'size': 24, 'content_type': 'foo/bar', 'hash': 'jqfqkZwCywQ/gc9JZlkCIj3pbO7fBy9TTpSVYDCWfio='},
+            'metadata': {
+                'size': 24,
+                'content_type': 'foo/bar',
+                'hash': 'jqfqkZwCywQ/gc9JZlkCIj3pbO7fBy9TTpSVYDCWfio=',
+                'extra_headers': [],
+            },
             'expiration': expiration,
         },
     }
@@ -148,7 +156,11 @@ def test_duplicate_file(client: TestClient):
     r = client.post(
         f'/{pk1}/snap.file',
         data=content,
-        headers={'authorisation': key1, 'content-type': 'text/html'},
+        headers={
+            'authorisation': key1,
+            'content-type': 'text/html',
+            'response-header-foobar': 'spam',
+        },
     )
     assert r.status_code == 200, r.text
 
@@ -186,8 +198,11 @@ def test_duplicate_file(client: TestClient):
     assert r.status_code == 200, r.text
     assert r.json() == {
         f'site:{pk1}:/.smokeshow.json': {
-            'value': RegexStr(fr'\{{\n  "url": "https://example.com/{pk1}/",\n.*'),
-            'metadata': {'content_type': 'application/json', 'size': AnyInt()},
+            'value': IsStr(regex=fr'\{{\n  "url": "https://example.com/{pk1}/",\n.*', regex_flags=re.S),
+            'metadata': {
+                'content_type': 'application/json',
+                'size': IsInt(),
+            },
             'expiration': expiration1,
         },
         f'site:{pk1}:/snap.file': {
@@ -196,6 +211,7 @@ def test_duplicate_file(client: TestClient):
                 'size': 19,
                 'content_type': 'text/html',
                 'hash': 'WIFwflSwES+QG8g6H/usrI+rdOpGpvcGo+/F99TBxiU=',
+                'extra_headers': [['foobar', 'spam']],
             },
             'expiration': expiration1,
         },
@@ -205,13 +221,18 @@ def test_duplicate_file(client: TestClient):
     assert r.status_code == 200, r.text
     assert r.json() == {
         f'site:{pk2}:/.smokeshow.json': {
-            'value': RegexStr(fr'\{{\n  "url": "https://example.com/{pk2}/",\n.*'),
-            'metadata': {'content_type': 'application/json', 'size': AnyInt()},
+            'value': IsStr(regex=fr'\{{\n  "url": "https://example.com/{pk2}/",\n.*', regex_flags=re.S),
+            'metadata': {'content_type': 'application/json', 'size': IsInt()},
             'expiration': expiration2,
         },
         f'site:{pk2}:/different.file': {
             'value': '1',
-            'metadata': {'size': 19, 'content_type': 'foo/bar', 'hash': 'WIFwflSwES+QG8g6H/usrI+rdOpGpvcGo+/F99TBxiU='},
+            'metadata': {
+                'size': 19,
+                'content_type': 'foo/bar',
+                'hash': 'WIFwflSwES+QG8g6H/usrI+rdOpGpvcGo+/F99TBxiU=',
+                'extra_headers': [],
+            },
             'expiration': expiration2,
         },
     }
