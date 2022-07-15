@@ -159,7 +159,7 @@ def test_duplicate_file(client: TestClient):
         headers={
             'authorisation': key1,
             'content-type': 'text/html',
-            'response-header-foobar': 'spam',
+            'Response-Header-Foobar': 'spam',
         },
     )
     assert r.status_code == 200, r.text
@@ -188,6 +188,7 @@ def test_duplicate_file(client: TestClient):
     assert r.status_code == 200, r.text
     assert r.text == content
     assert r.headers['content-type'] == 'text/html'
+    assert r.headers['Foobar'] == 'spam'
 
     r = client.get(f'/{pk2}/different.file')
     assert r.status_code == 200, r.text
