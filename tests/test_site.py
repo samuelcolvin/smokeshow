@@ -2,8 +2,8 @@ import re
 from datetime import datetime, timedelta, timezone
 from time import sleep
 
+from dirty_equals import IsInt, IsNow, IsStr
 from pytest_cloudflare_worker import TestClient
-from dirty_equals import IsInt, IsStr, IsNow
 
 
 def test_create_get(client: TestClient):
