@@ -17,7 +17,7 @@ __all__ = 'cli', 'upload'
 
 USER_AGENT = f'smokeshow-cli-v{VERSION}'
 KEY_HASH_THRESHOLD_POW = 234
-KEY_HASH_THRESHOLD = 2 ** KEY_HASH_THRESHOLD_POW
+KEY_HASH_THRESHOLD = 2**KEY_HASH_THRESHOLD_POW
 ROOT_URL = 'https://smokeshow.helpmanual.io'
 cli = Typer(
     name='smokeshow', help=f'smokeshow CLI v{VERSION}, see https://smokeshow.helpmanual.io for more information.'
@@ -81,6 +81,9 @@ async def upload(
     else:
         auth_key_use = auth_key
 
+    if not root_path.exists():
+        raise ValueError(f'root path "{root_path}" does not exist')
+
     async with AsyncClient(timeout=30) as client:
         r = await client.post(root_url + '/create/', headers={'Authorisation': auth_key_use, 'User-Agent': USER_AGENT})
         if r.status_code != 200:
@@ -136,7 +139,7 @@ def get_content_type(url: str) -> Optional[str]:
 
 
 KB = 1024
-MB = KB ** 2
+MB = KB**2
 
 
 def fmt_size(num: int) -> str:

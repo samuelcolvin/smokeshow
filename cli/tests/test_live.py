@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from pytest_toolbox.comparison import AnyInt, CloseToNow, RegexStr
+from dirty_equals import IsInt, IsStr
 
 from smokeshow import upload
 
@@ -38,10 +38,10 @@ def test_create_site(client: TestClient, tmp_path: Path, await_, mocker):
     assert r.status_code == 200, r.text
     assert r.json() == {
         'url': url,
-        'site_creation': CloseToNow(),
-        'site_expiration': RegexStr('20..-..-..T.*'),
+        'site_creation': IsStr(regex=r'\d{4}-.+'),
+        'site_expiration': IsStr(regex='20..-..-..T.*'),
         'files': [
             '/index.html',
         ],
-        'total_site_size': AnyInt(),
+        'total_site_size': IsInt(),
     }

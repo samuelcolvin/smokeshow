@@ -21,7 +21,7 @@ lint:
 
 .PHONY: test
 test:
-	pytest
+	pytest -vv
 
 .PHONY: all
 all: lint test

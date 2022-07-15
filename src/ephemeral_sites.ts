@@ -129,6 +129,9 @@ async function post_file(request: Request, public_key: string, path: string): Pr
   }
 
   const content_type = request.headers.get('content-type')
+  const extra_headers = [...request.headers.entries()]
+    .filter(([k]) => k.startsWith('response-header-'))
+    .map(([k, v]) => [k.slice(16), v])
   const blob = await request.blob()
   const size = blob.size
 
@@ -139,7 +142,7 @@ async function post_file(request: Request, public_key: string, path: string): Pr
   const hash = array_to_base64(new Uint8Array(hash_array))
 
   const expiration = Math.round((creation_ms + SITE_TTL) / 1000)
-  const metadata = {size, content_type, hash}
+  const metadata = {size, content_type, hash, extra_headers}
 
   await Promise.all([
     STORAGE.put(`site:${public_key}:${path}`, '1', {expiration, metadata}),
