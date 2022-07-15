@@ -12,7 +12,7 @@ export function simple_response(
   content_type = 'text/plain',
   expires_in: number | null = null,
 ): Response {
-  return new Response(body, {headers: build_headers(content_type, expires_in)})
+  return new Response(body, {headers: build_headers({content_type}, expires_in)})
 }
 
 export function json_response(obj: Record<string, any>): Response {
@@ -41,6 +41,7 @@ export interface FileMetadata {
   content_type?: string
   hash?: string
   size?: number
+  extra_headers?: [string, string][]
 }
 
 export interface KVFile {
@@ -50,14 +51,17 @@ export interface KVFile {
 
 export function response_from_kv(cache_value: KVFile, expires: number | null = null, status = 200): Response {
   const metadata: FileMetadata = cache_value.metadata || {}
-  return new Response(cache_value.value, {status, headers: build_headers(metadata.content_type, expires)})
+  return new Response(cache_value.value, {status, headers: build_headers(metadata, expires)})
 }
 
-function build_headers(content_type: string | undefined, expires_in: number | null): Record<string, string> {
+function build_headers(metadata: FileMetadata, expires_in: number | null): Record<string, string> {
   const headers: Record<string, string> = {}
-  headers['content-type'] = content_type || 'application/octet-stream'
+  headers['content-type'] = metadata.content_type || 'application/octet-stream'
   if (expires_in != null) {
     headers['expires'] = new Date(Date.now() + expires_in * 1000).toUTCString()
+  }
+  for (const [k, v] of metadata.extra_headers || []) {
+    headers[k] = v
   }
   return headers
 }
