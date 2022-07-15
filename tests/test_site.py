@@ -65,7 +65,7 @@ def test_create_get(client: TestClient):
     expiration = int(round(site_expiration.replace(tzinfo=timezone.utc).timestamp()))
     r = client.get('/testing/storage/', params={'prefix': f'site:{pk}'})
     assert r.status_code == 200, r.text
-    debug(r.json())
+    # debug(r.json())
     # debug(client.inspect_log_wait(wait_time=3))
     assert r.json() == {
         f'site:{pk}:/': {
