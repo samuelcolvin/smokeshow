@@ -104,6 +104,11 @@ async def upload(
             ct = get_content_type(url_path)
             if ct:
                 headers['Content-Type'] = ct
+
+            if file_path.suffix == '.whl':
+                # support pyodide install of wheels
+                headers['Response-Header-Access-Control-Allow-Origin'] = '*'
+
             r2 = await client.post(upload_root + url_path, content=file_path.read_bytes(), headers=headers)
             if r2.status_code == 200:
                 upload_info = r2.json()
