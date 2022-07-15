@@ -2,8 +2,8 @@ import re
 import sys
 
 import pytest
-from typer.testing import CliRunner
 from dirty_equals import IsStr
+from typer.testing import CliRunner
 
 from smokeshow.main import cli
 
@@ -13,7 +13,9 @@ runner = CliRunner()
 def test_help():
     result = runner.invoke(cli, ['--help'])
     assert result.exit_code == 0
-    assert result.stdout == IsStr(regex=r'.*smokeshow CLI v\d\.[\d.]+, see https://smokeshow\.helpmanual\.io for.*', regex_flags=re.S)
+    assert result.stdout == IsStr(
+        regex=r'.*smokeshow CLI v\d\.[\d.]+, see https://smokeshow\.helpmanual\.io for.*', regex_flags=re.S
+    )
 
 
 def test_generate_key(mocker):
