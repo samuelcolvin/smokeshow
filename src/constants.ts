@@ -6,5 +6,5 @@ export const INFO_FILE_NAME = '/.smokeshow.json'
 export const PUBLIC_KEY_LENGTH = 20
 export const SITE_TTL = TESTING ? 90 * 1000 : 365 * 24 * 3600 * 1000
 export const UPLOAD_TTL = TESTING ? 70 * 1000 : 3600 * 1000
-export const SITES_PER_DAY = 50
+export const SITES_PER_DAY = 200
 export const MAX_SITE_SIZE = 30 * 1024 ** 2

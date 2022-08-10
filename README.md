@@ -228,6 +228,6 @@ inspecting the `Referer` header and redirecting to the intended page.
 ## Limits
 
 The following limits apply to usage of _smokeshow_:
-* **50**: maximum number of sites you can create a day with a given key
+* **200**: maximum number of sites you can create a day with a given key
 * **30 MB**: maximum site size
 * **25 MB**: maximum size of a file - this is a limit of [Cloudflare's KV store](https://developers.cloudflare.com/workers/platform/limits#kv-limits)
