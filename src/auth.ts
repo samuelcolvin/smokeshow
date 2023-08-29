@@ -87,7 +87,7 @@ async function get_hmac_secret_key(env: Env): Promise<CryptoKey> {
   } else {
     const secret_key = (await crypto.subtle.generateKey(hmac_algo, true, hmac_key_usage)) as CryptoKey
 
-    const new_raw_key = await crypto.subtle.exportKey('raw', secret_key) as ArrayBuffer
+    const new_raw_key = (await crypto.subtle.exportKey('raw', secret_key)) as ArrayBuffer
     await env.STORAGE.put('hmac_secret_key', new_raw_key)
     return secret_key
   }

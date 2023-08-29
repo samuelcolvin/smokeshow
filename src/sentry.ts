@@ -1,4 +1,4 @@
-import { FullContext } from './utils'
+import {FullContext} from './utils'
 
 interface Extra {
   level?: string
@@ -9,25 +9,25 @@ interface Extra {
 export function captureMessage(
   context: FullContext,
   message: string,
-  { level = 'info', extra = {} }: Extra = {},
+  {level = 'info', extra = {}}: Extra = {},
 ): Promise<void> {
-  return _capture(context, { message, level, extra })
+  return _capture(context, {message, level, extra})
 }
 
 export function captureException(
   context: FullContext,
   exc: Error,
-  { level = 'error', extra = {} }: Extra = {},
+  {level = 'error', extra = {}}: Extra = {},
 ): Promise<void> {
   const message = exc.toString() || exc.message || 'Unknown error'
   return _capture(context, {
     exception: {
-      mechanism: { handled: true, type: 'generic' },
+      mechanism: {handled: true, type: 'generic'},
       values: [
         {
           type: 'Error',
           value: message,
-          stacktrace: { frames: get_frames(exc.stack) },
+          stacktrace: {frames: get_frames(exc.stack)},
         },
       ],
     },
@@ -50,22 +50,19 @@ interface SentryData {
   logger: string
   environment: string
   fingerprint: string[]
-  user: { ip_address: string }
-  request: { url: string; method: string; headers: Record<string, string> }
+  user: {ip_address: string}
+  request: {url: string; method: string; headers: Record<string, string>}
   exception?: {
-    mechanism: { handled: boolean; type: string }
-    values: { type: string; value: string; stacktrace: { frames: Frame[] } }[]
+    mechanism: {handled: boolean; type: string}
+    values: {type: string; value: string; stacktrace: {frames: Frame[]}}[]
   }
   message?: string
   level?: string
   extra: Record<string, any>
 }
 
-async function _capture(
-  context: FullContext,
-  data: Partial<SentryData>,
-): Promise<void> {
-  const { request } = context
+async function _capture(context: FullContext, data: Partial<SentryData>): Promise<void> {
+  const {request} = context
   const sentry_data: SentryData = Object.assign(
     {
       platform: 'javascript',
@@ -96,9 +93,7 @@ async function _capture(
   // if (this.release) {
   //   defaults.release = this.release
   // }
-  const m = context.env.SENTRY_DSN.match(
-    /^https:\/\/(.+?)@(.+?)\.ingest\.sentry\.io\/(.+)/,
-  )
+  const m = context.env.SENTRY_DSN.match(/^https:\/\/(.+?)@(.+?)\.ingest\.sentry\.io\/(.+)/)
   const [, sentry_key, , app] = m as RegExpMatchArray
 
   const params = {
@@ -113,16 +108,13 @@ async function _capture(
 
   await fetch(sentry_url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {'Content-Type': 'application/json'},
     body: JSON.stringify(sentry_data),
   })
 }
 
 export const headers_object = (headers: Headers): Record<string, string> =>
-  Object.assign(
-    {},
-    ...Array.from(headers.entries()).map(([k, v]) => ({ [k]: v })),
-  )
+  Object.assign({}, ...Array.from(headers.entries()).map(([k, v]) => ({[k]: v})))
 
 function get_frames(stack: string | undefined): Frame[] {
   if (!stack) {
@@ -132,8 +124,8 @@ function get_frames(stack: string | undefined): Frame[] {
   lines.splice(0, 1)
   return lines
     .reverse()
-    .filter((line) => line.match(/^ {4}at /))
-    .map((line) => {
+    .filter(line => line.match(/^ {4}at /))
+    .map(line => {
       let filename, func, lineno, colno
       const m1 = line.match(/^ +at (\S+) \((.+?):(\d+):(\d+)\)/)
       if (m1) {

@@ -11,7 +11,7 @@ import {
   RequestExtraInfo,
   list_all,
   Env,
-  FullContext
+  FullContext,
 } from './utils'
 import {check_create_auth, check_upload_auth, create_random_string, sign_auth, array_to_base64} from './auth'
 import {create_site_check, new_file_check} from './limits'
