@@ -1,7 +1,7 @@
 name = "smokeshow-staging"
 account_id = "d6252a570c309c113744c9e11317e271"
 workers_dev = true
-main = "worker/script.js"
+main = "worker/index.mjs"
 compatibility_date = "2022-07-15"
 kv_namespaces = [
   {binding="STORAGE", id="b4ba1fc5fb614af7be37ad63a42c218d", preview_id="6b60f496af50470784eaf3a118032148"}
@@ -9,10 +9,11 @@ kv_namespaces = [
 
 [build]
 command = "npm run build"
+watch_dirs = "src"
 
 [vars]
 DEBUG = "TRUE"
-watch_dirs = "src"
+ENVIRONMENT = "dev"
 
 [env.production]
 name = "smokeshow"
@@ -24,3 +25,4 @@ kv_namespaces = [
 ]
 [env.production.vars]
 DEBUG = "FALSE"
+ENVIRONMENT = "production"

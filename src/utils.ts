@@ -1,7 +1,7 @@
 import {SITE_TTL} from './constants'
 
 export interface Env {
-  DEBUG: string
+  DEBUG: 'TRUE' | 'FALSE'
   STORAGE: KVNamespace
   ENVIRONMENT: 'dev' | 'production'
   SENTRY_DSN?: string

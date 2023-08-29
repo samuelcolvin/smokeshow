@@ -8,7 +8,12 @@ declare module '*.md' {
   export default content
 }
 
-declare module '!raw-loader!*' {
+declare module '*.svg' {
+  const content: string
+  export default content
+}
+
+declare module '*.html' {
   const content: string
   export default content
 }

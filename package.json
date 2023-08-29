@@ -4,8 +4,8 @@
   "description": "Temporary site deployment using cloudflare workers",
   "main": "worker/script.js",
   "scripts": {
-    "build": "webpack",
-    "dev": "NODE_ENV=development npm run build",
+    "build": "node build.mjs",
+    "dev": "wrangler dev",
     "format": "prettier --write 'src/**/*.{js,ts,css,scss,html}'",
     "lint": "eslint --max-warnings=0 src && prettier --check 'src/**/*.{js,ts,css,scss,html}'"
   },
@@ -39,20 +39,16 @@
     "@cloudflare/workers-types": "^4.20230821.0",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
+    "esbuild": "^0.19.2",
+    "esbuild-sass-plugin": "^2.13.0",
     "eslint": "^8.48.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-config-typescript": "^3.0.0",
     "highlight.js": "^10.6.0",
-    "markdown-loader": "^6.0.0",
+    "marked": "^7.0.5",
     "prettier": "^3.0.3",
-    "raw-loader": "^4.0.2",
     "sass": "^1.32.8",
-    "sass-loader": "10.1.1",
-    "ts-loader": "^9.4.4",
     "typescript": "^5.2.2",
-    "webpack": "^5.88.2",
-    "webpack-cli": "^5.1.4",
-    "wrangler": "^3.6.0",
-    "wranglerjs-compat-webpack-plugin": "^0.0.8"
+    "wrangler": "^3.6.0"
   }
 }

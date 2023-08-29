@@ -3,9 +3,9 @@ import {PUBLIC_KEY_LENGTH} from './constants'
 import {site_request, create_site} from './ephemeral_sites'
 import styles from './index/styles/main.scss'
 import readme from '../README.md'
-import github_svg from '!raw-loader!./index/github.svg'
-import moon_svg from '!raw-loader!./index/moon.svg'
-import index_html from '!raw-loader!./index/index.html'
+import github_svg from './index/github.svg'
+import moon_svg from './index/moon.svg'
+import index_html from './index/index.html'
 
 export const site_path_regex = new RegExp(`^\\/([a-z0-9]{${PUBLIC_KEY_LENGTH}})(\\/.*)`)
 
