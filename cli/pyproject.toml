@@ -1,0 +1,98 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "smokeshow/version.py"
+
+[project]
+name = "smokeshow"
+description = "Deploy ephemeral websites."
+authors = [{name = "Samuel Colvin", email = "s@muelcolvin.com"}]
+license = {file = "LICENSE"}
+readme = "README.md"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Unix",
+    "Operating System :: POSIX :: Linux",
+    "Environment :: Console",
+    "Environment :: MacOS X",
+    "Environment :: Web Environment",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Site Management",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "httpx>=0.24",
+    "typer>=0.8.0",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://smokeshow.helpmanual.io"
+Documentation = "https://smokeshow.helpmanual.io"
+Funding = "https://github.com/sponsors/samuelcolvin"
+Source = "https://github.com/samuelcolvin/smokeshow"
+Changelog = "https://github.com/samuelcolvin/smokeshow/releases"
+
+[project.scripts]
+smokeshow = "smokeshow.main:cli"
+
+[tool.ruff]
+line-length = 120
+extend-select = ["Q", "RUF100", "C90", "UP", "I"]
+flake8-quotes = {inline-quotes = "single", multiline-quotes = "double"}
+mccabe = { max-complexity = 14 }
+isort = { known-first-party = ["tests"] }
+target-version = "py38"
+
+[tool.pytest.ini_options]
+testpaths = "tests"
+filterwarnings = "error"
+
+[tool.coverage.run]
+source = ["smokeshow"]
+omit = ["smokeshow/__main__.py"]
+branch = true
+
+[tool.coverage.report]
+precision = 2
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "raise NotImplemented",
+    "if TYPE_CHECKING:",
+    "@overload",
+]
+
+[tool.black]
+color = true
+line-length = 120
+target-version = ["py38"]
+skip-string-normalization = true
+
+[tool.isort]
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+combine_as_imports = true
+color_output = true
+
+[tool.mypy]
+strict = true
+warn_return_any = false
+show_error_codes = true

@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: actions/setup-node@v1
         with:
@@ -26,16 +26,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - uses: actions/setup-node@v1
       with:
         node-version: '14.x'
 
     - name: set up python
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.8'
+        python-version: '3.11'
 
     - run: ./tests/gh_install_wrangler.sh
 
@@ -50,18 +50,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: '3.11'
 
       - name: install
-        working-directory: cli
         run: |
-          pip install -U setuptools pip
-          pip install -U -r ../tests/requirements-linting.txt
-          pip install -e .
+          pip install -U pip
+          pip install -U -r requirements/cli.txt
 
       - run: make lint
         working-directory: cli
@@ -74,38 +72,27 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, macos]
-        python-version: ['3.7', '3.8', '3.9']
+        python-version: ['3.8', '3.9', '3.10', '3.11']
 
     runs-on: ${{ matrix.os }}-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: set up python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: install
-        working-directory: cli
         run: |
-          pip install -U setuptools pip
-          pip install -U -r ../tests/requirements-testing.txt
-          pip install -e .
+          pip install -U pip
+          pip install -U -r requirements/cli.txt
       - run: pip freeze
 
       - name: test
         run: make test
         working-directory: cli
-
-      - run: ./tests/gh_install_wrangler.sh
-        if: matrix.os == 'ubuntu' && matrix.python-version == '3.8'
-
-      - run: pytest tests/test_live.py --cf-auth-client --cf-wrangler-dir ..
-        working-directory: cli
-        if: matrix.os == 'ubuntu' && matrix.python-version == '3.8'
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: rename coverage
         working-directory: cli
@@ -114,7 +101,7 @@ jobs:
           mv .coverage coverage/.coverage.${{ matrix.os }}-py${{ matrix.python-version }}
 
       - name: store coverage files
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: coverage
           path: cli/coverage
@@ -126,11 +113,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: '3.11'
 
       - name: get coverage files
         uses: actions/download-artifact@v2
@@ -152,3 +139,15 @@ jobs:
           SMOKESHOW_GITHUB_COVERAGE_THRESHOLD: 90
           SMOKESHOW_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SMOKESHOW_GITHUB_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
+  check:  # Used for branch protection
+    if: always()
+    needs: [server-lint, server-test, cli-lint, cli-test, cli-coverage-check]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@release/v1
+        id: all-green
+        with:
+          jobs: ${{ toJSON(needs) }}
