@@ -1,0 +1,15 @@
+# linting
+black
+mypy
+ruff
+
+# testing
+aiohttp
+coverage
+dirty-equals
+pytest
+pytest-mock
+pytest-pretty
+
+# install
+-e file:cli

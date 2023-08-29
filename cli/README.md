@@ -56,7 +56,7 @@ I build _smokeshow_ primarily to preview documentation and coverage generate wit
 _smokeshow_ therefore integrates directly with github actions to add a status to commits with a link to
 the newly created ephemeral site.
 
-In addition, _smokeshow_ has custom logic to extract the total coverage figure from 
+In addition, _smokeshow_ has custom logic to extract the total coverage figure from
 [coverage.py](https://coverage.readthedocs.io/en/coverage-5.5/) HTML coverage reports to both annotate commit status
 updates and decide if the commit status is "success" or "failure".
 

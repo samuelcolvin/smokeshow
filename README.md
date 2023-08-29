@@ -28,7 +28,7 @@ What's great about _smokeshow_:
 
 ## Usage Warning
 
-_smokeshow_ is currently free for anyone to use ([within limits](#limits)), but if it starts to cost me a 
+_smokeshow_ is currently free for anyone to use ([within limits](#limits)), but if it starts to cost me a
 significant amount, I might reduce the limits, or stop it being free.
 Please [watch the github repo](https://github.com/samuelcolvin/smokeshow)
 to get notifications of changes to the service if you're using it regularly or in an automated way.
@@ -40,7 +40,7 @@ your own instance to cloudflare workers, you can.
 
 Uploading a site to _smokeshow_ requires three steps:
 
-1. Create an upload key where a numeric representation of its `sha-256` hash is less than `2 ^ 234`. 
+1. Create an upload key where a numeric representation of its `sha-256` hash is less than `2 ^ 234`.
    In other words; a simple proof of work. This key can then be used to create multiple sites.
 2. Create a new site.
 3. Upload one or more files to that site.
@@ -49,7 +49,7 @@ All three steps can be performed **either** [the python CLI](#cli-usage), or usi
 
 ### CLI Usage
 
-The command line interface (CLI) for _smokeshow_ is written in python and available to download via 
+The command line interface (CLI) for _smokeshow_ is written in python and available to download via
 [pypi](https://pypi.org/project/smokeshow/). Assuming you have python 3.7+ and pip installed, installing
 the _smokeshow_ CLI should be as simple as:
 
@@ -100,7 +100,7 @@ I build _smokeshow_ primarily to preview documentation and coverage generate wit
 _smokeshow_ therefore integrates directly with github actions to add a status to commits with a link to
 the newly created ephemeral site.
 
-In addition, _smokeshow_ has custom logic to extract the total coverage figure from 
+In addition, _smokeshow_ has custom logic to extract the total coverage figure from
 [coverage.py](https://coverage.readthedocs.io/en/coverage-5.5/) HTML coverage reports to both annotate commit status
 updates and decide if the commit status is "success" or "failure".
 
@@ -205,7 +205,7 @@ header in the upload request.
 ### Path Matches
 
 The following path equivalence is supported:
-* `/path/to/file/` should return `/path/to/file/index.html` or `/path/to/file.html` or 
+* `/path/to/file/` should return `/path/to/file/index.html` or `/path/to/file.html` or
   (less canonically) `/path/to/file/index.json`
 * trailing slashes don't matter
 
