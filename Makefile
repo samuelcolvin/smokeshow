@@ -8,7 +8,7 @@ install:
 
 .PHONY: format-js
 format-js:
-	yarn format
+	npm run format
 
 .PHONY: format
 format: format-js
@@ -16,7 +16,7 @@ format: format-js
 
 .PHONY: lint-js
 lint-js:
-	yarn lint
+	npm run lint
 
 .PHONY: lint
 lint: lint-js

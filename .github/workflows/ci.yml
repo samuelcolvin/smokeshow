@@ -19,8 +19,9 @@ jobs:
         with:
           node-version: '18.x'
 
-      - run: yarn
-      - run: yarn lint
+      - run: npm install
+      - run: npm run lint
+      - run: npm run build
 
   cli-lint:
     runs-on: ubuntu-latest

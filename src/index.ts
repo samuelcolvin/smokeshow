@@ -2,6 +2,7 @@ import {captureException} from './sentry'
 import {views, site_path_regex} from './views'
 import {debug, HttpError, check_method, clean_path, Env, FullContext} from './utils'
 
+console.log('top level')
 export default {
   fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     return handle({request, env, ctx})

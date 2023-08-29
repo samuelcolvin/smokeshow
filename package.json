@@ -2,7 +2,7 @@
   "name": "smokeshow",
   "version": "1.0.0",
   "description": "Temporary site deployment using cloudflare workers",
-  "main": "index.js",
+  "main": "worker/script.js",
   "scripts": {
     "build": "webpack",
     "dev": "NODE_ENV=development npm run build",
@@ -51,6 +51,8 @@
     "ts-loader": "^9.4.4",
     "typescript": "^5.2.2",
     "webpack": "^5.88.2",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^5.1.4",
+    "wrangler": "^3.6.0",
+    "wranglerjs-compat-webpack-plugin": "^0.0.8"
   }
 }
