@@ -59,7 +59,7 @@ jobs:
       - name: install
         run: |
           pip install -U pip
-          pip install -U -r requirements/cli.txt
+          pip install -r requirements/cli.txt
 
       - run: make lint
         working-directory: cli
@@ -87,12 +87,12 @@ jobs:
       - name: install
         run: |
           pip install -U pip
-          pip install -U -r requirements/cli.txt
+          pip install -r requirements/cli.txt
       - run: pip freeze
 
       - name: test
-        run: make test
         working-directory: cli
+        run: make test
 
       - name: rename coverage
         working-directory: cli
@@ -108,8 +108,7 @@ jobs:
 
   cli-coverage-check:
     # dogfooding! use smokeshow to view our coverage report
-    needs:
-      - cli-test
+    needs: [cli-test]
     runs-on: ubuntu-latest
 
     steps:
