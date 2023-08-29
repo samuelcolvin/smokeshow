@@ -1,9 +1,19 @@
 import {SITE_TTL} from './constants'
 
-declare const DEBUG: string | undefined
-declare const STORAGE: KVNamespace
+export interface Env {
+  DEBUG: string
+  STORAGE: KVNamespace
+  ENVIRONMENT: 'dev' | 'production'
+  SENTRY_DSN?: string
+}
 
-export const debug = typeof DEBUG !== 'undefined' && DEBUG === 'TRUE'
+export interface FullContext {
+  request: Request
+  env: Env
+  ctx: ExecutionContext
+}
+
+export const debug = (env: Env) => env.DEBUG === 'TRUE'
 
 export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'OPTIONS'
 
@@ -19,10 +29,10 @@ export function json_response(obj: Record<string, any>): Response {
   return new Response(JSON.stringify(obj, null, 2), {headers: {'content-type': 'application/json'}})
 }
 
-export async function cached_proxy(url: string, content_type: string): Promise<Response> {
+export async function cached_proxy(url: string, content_type: string, env: Env): Promise<Response> {
   const cache_key = `file:${url}`
 
-  const cache_value = await STORAGE.getWithMetadata(cache_key, 'stream')
+  const cache_value = await env.STORAGE.getWithMetadata(cache_key, 'stream')
   if (cache_value.value) {
     return response_from_kv(cache_value as KVFile, 3600)
   }
@@ -33,7 +43,7 @@ export async function cached_proxy(url: string, content_type: string): Promise<R
   }
   const blob = await r.blob()
   const body = await blob.arrayBuffer()
-  await STORAGE.put(cache_key, body, {expirationTtl: SITE_TTL / 1000, metadata: {content_type}})
+  await env.STORAGE.put(cache_key, body, {expirationTtl: SITE_TTL / 1000, metadata: {content_type}})
   return simple_response(body, content_type, 3600)
 }
 
@@ -104,7 +114,7 @@ export interface View {
   match: RegExp | string
   allow?: Method | Method[]
   view: {
-    (request: Request, info: RequestExtraInfo): Promise<Response>
+    (context: FullContext, info: RequestExtraInfo): Promise<Response>
   }
 }
 
@@ -122,14 +132,14 @@ interface KvListItem {
   metadata: {content_type: string; size: number}
 }
 
-export async function list_all(prefix: string): Promise<KvListItem[]> {
+export async function list_all(prefix: string, env: Env): Promise<KvListItem[]> {
   const items: KvListItem[] = []
-  let value = await STORAGE.list({prefix: prefix})
+  let value = await env.STORAGE.list({prefix: prefix})
   while (true) {
     items.push(...(value.keys as KvListItem[]))
     if (value.list_complete) {
       return items
     }
-    value = await STORAGE.list({prefix: prefix, cursor: value.cursor})
+    value = await env.STORAGE.list({prefix: prefix, cursor: value.cursor})
   }
 }

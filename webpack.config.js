@@ -14,8 +14,9 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
+        test: /\.ts$/,
         loader: 'ts-loader',
+        exclude: /node_modules/,
         options: {
           // transpileOnly: true,
         }

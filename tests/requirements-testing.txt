@@ -1,8 +1,0 @@
-aiohttp==3.8.1
-coverage==6.4.2
-dirty-equals==0.4
-pytest==7.1.2
-pytest-cov==3.0.0
-pytest-mock==3.8.2
-pytest-sugar==0.9.5
-pytest-cloudflare-worker==0.0.4;python_version=='3.8'
