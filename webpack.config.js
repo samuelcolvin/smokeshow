@@ -1,5 +1,6 @@
 const path = require('path')
 const hljs = require('highlight.js')
+const {WranglerJsCompatWebpackPlugin} = require("wranglerjs-compat-webpack-plugin")
 
 module.exports = {
   output: {
@@ -11,6 +12,7 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.css', '.scss'],
   },
+  plugins: [new WranglerJsCompatWebpackPlugin()],
   module: {
     rules: [
       {

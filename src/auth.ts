@@ -1,7 +1,5 @@
-import {HttpError} from './utils'
+import {Env, FullContext, HttpError} from './utils'
 import {AUTH_HASH_THRESHOLD, UPLOAD_TTL} from './constants'
-
-declare const STORAGE: KVNamespace
 
 export async function check_create_auth(request: Request): Promise<string> {
   const auth_key = get_auth_header(request)
@@ -21,11 +19,11 @@ export interface UploadAuth {
   creation: number
 }
 
-export async function check_upload_auth(public_key: string, request: Request): Promise<number> {
+export async function check_upload_auth(public_key: string, {request, env}: FullContext): Promise<number> {
   const auth_key = get_auth_header(request)
   const auth_array = get_auth_array(auth_key)
 
-  const upload_auth = await decode_signed_object(auth_array)
+  const upload_auth = await decode_signed_object(auth_array, env)
 
   if (upload_auth.public_key != public_key) {
     throw new HttpError(400, "Authorisation secret doesn't match public key from upload URL")
@@ -36,10 +34,10 @@ export async function check_upload_auth(public_key: string, request: Request): P
   return upload_auth.creation
 }
 
-export async function sign_auth(upload_auth: UploadAuth): Promise<string> {
+export async function sign_auth(upload_auth: UploadAuth, env: Env): Promise<string> {
   const data = new TextEncoder().encode(JSON.stringify([upload_auth.public_key, upload_auth.creation]))
 
-  const secret_key = await get_hmac_secret_key()
+  const secret_key = await get_hmac_secret_key(env)
   const signature = new Uint8Array(await crypto.subtle.sign('HMAC', secret_key, data))
 
   // length has to be hard coded as it's used in
@@ -79,26 +77,26 @@ function get_auth_array(auth_b64: string): Uint8Array {
   }
 }
 
-const hmac_algo: HmacImportParams = {name: 'HMAC', hash: {name: 'SHA-512'}}
-const hmac_key_usage: KeyUsage[] = ['sign', 'verify']
+const hmac_algo: SubtleCryptoImportKeyAlgorithm = {name: 'HMAC', hash: {name: 'SHA-512'}}
+const hmac_key_usage: string[] = ['sign', 'verify']
 
-async function get_hmac_secret_key(): Promise<CryptoKey> {
-  const raw_key = await STORAGE.get('hmac_secret_key', 'arrayBuffer')
+async function get_hmac_secret_key(env: Env): Promise<CryptoKey> {
+  const raw_key = await env.STORAGE.get('hmac_secret_key', 'arrayBuffer')
   if (raw_key) {
     return await crypto.subtle.importKey('raw', raw_key, hmac_algo, true, hmac_key_usage)
   } else {
     const secret_key = (await crypto.subtle.generateKey(hmac_algo, true, hmac_key_usage)) as CryptoKey
 
-    const new_raw_key = await crypto.subtle.exportKey('raw', secret_key)
-    await STORAGE.put('hmac_secret_key', new_raw_key)
+    const new_raw_key = (await crypto.subtle.exportKey('raw', secret_key)) as ArrayBuffer
+    await env.STORAGE.put('hmac_secret_key', new_raw_key)
     return secret_key
   }
 }
-async function decode_signed_object(raw_signed: Uint8Array): Promise<UploadAuth> {
+async function decode_signed_object(raw_signed: Uint8Array, env: Env): Promise<UploadAuth> {
   const signature = raw_signed.subarray(0, 64)
   const data = raw_signed.subarray(64)
 
-  const secret_key = await get_hmac_secret_key()
+  const secret_key = await get_hmac_secret_key(env)
   const valid = await crypto.subtle.verify('HMAC', secret_key, signature, data)
   if (!valid) {
     throw new HttpError(

@@ -3,7 +3,6 @@ repos:
   rev: v4.0.1
   hooks:
   - id: check-yaml
-    args: ['--unsafe']
   - id: check-toml
   - id: end-of-file-fixer
   - id: trailing-whitespace
@@ -11,15 +10,21 @@ repos:
 
 - repo: local
   hooks:
-  - id: lint
-    name: Lint
-    entry: make lint
+  - id: lint-js
+    name: Lint JS
+    entry: make lint-js
+    types: [javascript]
+    language: system
+    pass_filenames: false
+  - id: lint-python
+    name: Lint Python
+    entry: make -C cli lint
     types: [python]
     language: system
     pass_filenames: false
   - id: mypy
     name: Mypy
-    entry: make mypy
+    entry: make -C cli mypy
     types: [python]
     language: system
     pass_filenames: false

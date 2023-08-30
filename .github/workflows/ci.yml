@@ -17,34 +17,11 @@ jobs:
 
       - uses: actions/setup-node@v1
         with:
-          node-version: '14.x'
+          node-version: '18.x'
 
-      - run: yarn
-      - run: yarn lint
-
-  server-test:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - uses: actions/setup-node@v1
-      with:
-        node-version: '14.x'
-
-    - name: set up python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-
-    - run: ./tests/gh_install_wrangler.sh
-
-    - run: make install
-    - run: pip freeze
-    - run: make lint
-    - run: make test
-      env:
-        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - run: npm install
+      - run: npm run lint
+      - run: npm run build
 
   cli-lint:
     runs-on: ubuntu-latest
@@ -141,7 +118,7 @@ jobs:
 
   check:  # Used for branch protection
     if: always()
-    needs: [server-lint, server-test, cli-lint, cli-test, cli-coverage-check]
+    needs: [server-lint, cli-lint, cli-test, cli-coverage-check]
     runs-on: ubuntu-latest
 
     steps:

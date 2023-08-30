@@ -2,13 +2,23 @@
  * Logic related to the actual ephemeral sites, e.g. creating them, then adding files and making get requests
  */
 import {INFO_FILE_NAME, PUBLIC_KEY_LENGTH, SITE_TTL, UPLOAD_TTL} from './constants'
-import {HttpError, json_response, response_from_kv, KVFile, FileMetadata, RequestExtraInfo, list_all} from './utils'
+import {
+  HttpError,
+  json_response,
+  response_from_kv,
+  KVFile,
+  FileMetadata,
+  RequestExtraInfo,
+  list_all,
+  Env,
+  FullContext,
+} from './utils'
 import {check_create_auth, check_upload_auth, create_random_string, sign_auth, array_to_base64} from './auth'
 import {create_site_check, new_file_check} from './limits'
 
 declare const STORAGE: KVNamespace
 
-export async function create_site(request: Request, info: RequestExtraInfo): Promise<Response> {
+export async function create_site({request, env}: FullContext, info: RequestExtraInfo): Promise<Response> {
   const auth_key = await check_create_auth(request)
   const public_key = create_random_string(PUBLIC_KEY_LENGTH)
 
@@ -28,7 +38,7 @@ export async function create_site(request: Request, info: RequestExtraInfo): Pro
   const creation = new Date()
   const creation_ms = creation.getTime()
 
-  const secret_key = await sign_auth({public_key, creation: creation_ms})
+  const secret_key = await sign_auth({public_key, creation: creation_ms}, env)
 
   const site_expiration_date = new Date(creation_ms + SITE_TTL)
   const upload_expiration_date = new Date(creation_ms + UPLOAD_TTL)
@@ -53,13 +63,14 @@ export async function create_site(request: Request, info: RequestExtraInfo): Pro
   })
 }
 
-export async function site_request(request: Request, info: RequestExtraInfo): Promise<Response> {
+export async function site_request(c: FullContext, info: RequestExtraInfo): Promise<Response> {
+  const {request, env} = c
   const [, public_key, path] = info.match as RegExpMatchArray
   if (request.method == 'GET') {
-    return await get_file(request, public_key, path)
+    return await get_file(public_key, path, env)
   } else {
     // method == 'POST'
-    return await post_file(request, public_key, path)
+    return await post_file(c, public_key, path)
   }
 }
 
@@ -69,9 +80,9 @@ function* get_index_options(path: string) {
   yield `${path}index.json`
 }
 
-async function get_file(request: Request, public_key: string, path: string): Promise<Response> {
+async function get_file(public_key: string, path: string, env: Env): Promise<Response> {
   if (path === INFO_FILE_NAME) {
-    return json_response(await site_summary(public_key))
+    return json_response(await site_summary(public_key, env))
   }
 
   let v = await get_kv_file(public_key, path)
@@ -86,7 +97,7 @@ async function get_file(request: Request, public_key: string, path: string): Pro
     if (!v.value && path == '/') {
       return json_response({
         message: `The site "${public_key}" has no index file, hence this summary response`,
-        summary: await site_summary(public_key),
+        summary: await site_summary(public_key, env),
       })
     }
   }
@@ -122,11 +133,12 @@ async function get_kv_file(public_key: string, path: string): Promise<KVFile> {
   return {value: v.value, metadata}
 }
 
-async function post_file(request: Request, public_key: string, path: string): Promise<Response> {
-  const creation_ms = await check_upload_auth(public_key, request)
+async function post_file(c: FullContext, public_key: string, path: string): Promise<Response> {
+  const creation_ms = await check_upload_auth(public_key, c)
   if (path == INFO_FILE_NAME) {
     throw new HttpError(403, `Overwriting "${INFO_FILE_NAME}" is forbidden`)
   }
+  const {request} = c
 
   const content_type = request.headers.get('content-type')
   const extra_headers = [...request.headers.entries()]
@@ -152,13 +164,13 @@ async function post_file(request: Request, public_key: string, path: string): Pr
   return json_response({path, content_type, size, total_site_size})
 }
 
-async function site_summary(public_key: string): Promise<Record<string, any>> {
+async function site_summary(public_key: string, env: Env): Promise<Record<string, any>> {
   const raw = await STORAGE.get(`site:${public_key}:${INFO_FILE_NAME}`, 'json')
   if (!raw) {
     throw new HttpError(404, `Site "${public_key}" not found`)
   }
   const obj = raw as Record<string, any>
-  const files = await list_all(`site:${public_key}:`)
+  const files = await list_all(`site:${public_key}:`, env)
   obj.files = files.map(k => k.name.substr(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)
   obj.total_site_size = files.map(k => k.metadata.size).reduce((a, v) => a + v, 0)
   return obj

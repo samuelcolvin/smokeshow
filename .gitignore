@@ -8,3 +8,5 @@ node_modules/
 *.py[cod]
 /env/
 /env*/
+/.wrangler/
+/scratch/
