@@ -127,7 +127,7 @@ jobs:
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: |
+          command: >
             deploy
             --var GITHUB_SHA:${{ github.sha }}
             --var GITHUB_REF:${{ github.ref }}
@@ -158,7 +158,7 @@ jobs:
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: |
+          command: >
             deploy
             --var GITHUB_SHA:${{ github.sha }}
             --var GITHUB_REF:${{ github.ref }}
