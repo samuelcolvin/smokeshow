@@ -199,4 +199,4 @@ jobs:
       - name: Upload package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: cli/
+          packages-dir: cli/dist/

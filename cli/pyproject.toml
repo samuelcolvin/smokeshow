@@ -9,7 +9,7 @@ path = "smokeshow/version.py"
 name = "smokeshow"
 description = "Deploy ephemeral websites."
 authors = [{name = "Samuel Colvin", email = "s@muelcolvin.com"}]
-license = {file = "LICENSE"}
+license = "MIT"
 readme = "README.md"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
