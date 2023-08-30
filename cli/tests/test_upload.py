@@ -1,5 +1,6 @@
 import re
 
+import httpx
 import pytest
 
 from smokeshow import upload
@@ -43,6 +44,30 @@ def test_upload_dir(tmp_path, dummy_server: DummyServer, await_):
             'content-type': None,
         },
     }
+
+
+def test_upload_dir_error(tmp_path, dummy_server: DummyServer, await_, mocker):
+    mocker_upload = mocker.patch(
+        'smokeshow.main._upload_file', side_effect=ValueError('intentional error testing upload')
+    )
+    (tmp_path / 'index.html').write_text('<h1>testing</h1>')
+    (tmp_path / 'foo.js.map').write_text('{"x": 123}')
+    (tmp_path / 'bar.unknown_extension').write_text('xxx')
+    with pytest.raises(ValueError):
+        await_(upload(tmp_path, auth_key='testing-auth-key', root_url=dummy_server.server_name))
+    mocker_upload.call_count == 3
+
+
+def test_upload_file_http_error(tmp_path, dummy_server: DummyServer, await_, mocker):
+    mocker_upload = mocker.patch.object(
+        httpx.AsyncClient, 'post', side_effect=httpx.HTTPError('intentional error testing upload')
+    )
+    (tmp_path / 'index.html').write_text('<h1>testing</h1>')
+    (tmp_path / 'foo.js.map').write_text('{"x": 123}')
+    (tmp_path / 'bar.unknown_extension').write_text('xxx')
+    with pytest.raises(ValueError):
+        await_(upload(tmp_path, auth_key='testing-auth-key', root_url=dummy_server.server_name))
+    mocker_upload.assert_called_once()
 
 
 def test_upload_generate(mocker, tmp_path, dummy_server: DummyServer, await_):

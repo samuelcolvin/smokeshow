@@ -1,6 +1,7 @@
 import re
 import sys
 
+import httpx
 import pytest
 from dirty_equals import IsStr
 from typer.testing import CliRunner
@@ -53,4 +54,18 @@ def test_upload_error(tmp_path, mocker):
     assert result.exit_code == 1, result.stdout
     assert result.stdout == 'intentional error testing upload\n'
 
+    mocker_upload.assert_called_once()
+
+
+def test_upload_http_error(tmp_path, mocker):
+    mocker_upload = mocker.patch.object(
+        httpx.AsyncClient, 'post', side_effect=httpx.HTTPError('testing file upload failure')
+    )
+    f = tmp_path / 'test.html'
+    f.write_text('<h1>testing</h1>')
+    (tmp_path / 'foo.js.map').write_text('{"x": 123}')
+
+    result = runner.invoke(cli, ['upload', str(tmp_path), '--auth-key', 'testing-auth-key'], catch_exceptions=False)
+    assert result.exit_code == 1, result.stdout
+    assert result.stdout == 'Error creating ephemeral site testing file upload failure\n'
     mocker_upload.assert_called_once()
