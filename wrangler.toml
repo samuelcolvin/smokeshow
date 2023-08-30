@@ -9,11 +9,12 @@ kv_namespaces = [
 
 [build]
 command = "npm run build"
-watch_dirs = "src"
+watch_dir = "src"
 
 [vars]
 DEBUG = "TRUE"
-ENVIRONMENT = "dev"
+POSTGREST_ROOT = "https://xppeeplrlsmwbufrpfvu.supabase.co"
+POSTGREST_APIKEY = "-"
 
 [env.production]
 name = "smokeshow"
@@ -25,4 +26,3 @@ kv_namespaces = [
 ]
 [env.production.vars]
 DEBUG = "FALSE"
-ENVIRONMENT = "production"

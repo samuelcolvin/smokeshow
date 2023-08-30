@@ -7,7 +7,7 @@
     "build": "node build.mjs",
     "dev": "wrangler dev",
     "format": "prettier --write 'src/**/*.{js,ts,css,scss,html}'",
-    "lint": "eslint --max-warnings=0 src && prettier --check 'src/**/*.{js,ts,css,scss,html}'"
+    "lint": "eslint --max-warnings=0 src && prettier --check 'src/**/*.{js,ts,css,scss,html}' && tsc --noEmit"
   },
   "author": "Samuel Colvin",
   "license": "MIT",
@@ -46,6 +46,8 @@
     "eslint-config-typescript": "^3.0.0",
     "highlight.js": "^10.6.0",
     "marked": "^7.0.5",
+    "marked-gfm-heading-id": "^3.0.6",
+    "marked-highlight": "^2.0.4",
     "prettier": "^3.0.3",
     "sass": "^1.32.8",
     "typescript": "^5.2.2",

@@ -3,10 +3,12 @@ import {SITE_TTL} from './constants'
 export interface Env {
   DEBUG: 'TRUE' | 'FALSE'
   STORAGE: KVNamespace
-  ENVIRONMENT: 'dev' | 'production'
   SENTRY_DSN?: string
+  POSTGREST_ROOT: string
+  POSTGREST_APIKEY: string
+  GITHUB_SHA?: string
+  GITHUB_REF?: string
 }
-
 export interface FullContext {
   request: Request
   env: Env

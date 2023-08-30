@@ -16,17 +16,6 @@
 
     <link rel="preload" href="/styles.css" as="style" crossorigin="anonymous" />
     <link rel="stylesheet" href="/styles.css" crossorigin="anonymous" />
-
-    <!-- google analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-62733018-7"></script>
-    <script>
-      window.dataLayer = window.dataLayer || []
-      function gtag() {
-        dataLayer.push(arguments)
-      }
-      gtag('js', new Date())
-      gtag('config', 'UA-62733018-7')
-    </script>
   </head>
   <body>
     <main>
@@ -67,6 +56,14 @@
           </a>
         </header>
         {readme}
+        <div>
+          <h2>Deploy details</h2>
+          <ul>
+            <li>Git SHA <code>{github_sha}</code></li>
+            <li>Git ref <code>{github_ref}</code></li>
+            <li>Debug <code>{debug}</code></li>
+          </ul>
+        </div>
       </article>
     </main>
     <script
