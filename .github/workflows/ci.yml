@@ -160,6 +160,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           command: >
             deploy
+            -e production
             --var GITHUB_SHA:${{ github.sha }}
             --var GITHUB_REF:${{ github.ref }}
             --var POSTGREST_ROOT:${{ secrets.POSTGREST_ROOT }}
