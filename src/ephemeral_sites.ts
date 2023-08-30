@@ -87,17 +87,26 @@ async function get_file(public_key: string, path: string, env: Env): Promise<Res
 
   if (!v.value && path.endsWith('/')) {
     const index_options = get_index_options(path)
-    let next
-    while (!v.value && !(next = index_options.next()).done) {
-      v = await get_kv_file(public_key, next.value as string, env)
+    while (!v.value) {
+      const next = index_options.next();
+      if (!next.done) {
+        v = await get_kv_file(public_key, next.value, env)
+      }
     }
 
+    // if there's just one file, return that for index
     if (!v.value && path == '/') {
-      return json_response({
-        message: `The site "${public_key}" has no index file, hence this summary response`,
-        summary: await site_summary(public_key, env),
-      })
+      const only_file = await get_only(`site:${public_key}:`, env)
+      if (only_file) {
+        v = await get_kv_file(public_key, only_file, env)
+      } else {
+        return json_response({
+          message: `The site "${public_key}" has no index file, hence this summary response`,
+          summary: await site_summary(public_key, env),
+        })
+      }
     }
+
   }
   let status = 200
 
@@ -169,7 +178,16 @@ async function site_summary(public_key: string, env: Env): Promise<Record<string
   }
   const obj = raw as Record<string, any>
   const files = await list_all(`site:${public_key}:`, env)
-  obj.files = files.map(k => k.name.substr(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)
+  obj.files = files.map(k => k.name.substring(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)
   obj.total_site_size = files.map(k => k.metadata.size).reduce((a, v) => a + v, 0)
   return obj
+}
+
+
+export async function get_only(public_key: string, env: Env): Promise<string | undefined> {
+  const prefix = `site:${public_key}:`
+  const value = await env.STORAGE.list({prefix})
+  if (value.keys.length == 1) {
+    return value.keys[0].name.substring(prefix.length)
+  }
 }
