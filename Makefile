@@ -1,27 +1,26 @@
 .DEFAULT_GOAL := all
-isort = isort tests
-black = black -S -l 120 --target-version py37 tests
 
 .PHONY: install
 install:
-	pip install -U pip
-	pip install -U -r tests/requirements-linting.txt
-	pip install -U -r tests/requirements-testing.txt
+	pip install -U pip pip-tools pre-commit
+	pip install -U -r requirements/cli.txt
+	pre-commit install
+
+.PHONY: format-js
+format-js:
+	npm run format
 
 .PHONY: format
-format:
-	$(isort)
-	$(black)
+format: format-js
+	make -C cli format
+
+.PHONY: lint-js
+lint-js:
+	npm run lint
 
 .PHONY: lint
-lint:
-	flake8 tests
-	$(isort) --check-only --df
-	$(black) --check --diff
-
-.PHONY: test
-test:
-	pytest
+lint: lint-js
+	make -C cli lint
 
 .PHONY: all
-all: lint test
+all: lint

@@ -1,28 +1,33 @@
 import {captureException} from './sentry'
 import {views, site_path_regex} from './views'
-import {debug, HttpError, check_method, clean_path} from './utils'
+import {debug, HttpError, check_method, clean_path, Env, FullContext} from './utils'
 
-addEventListener('fetch', e => e.respondWith(handle(e)))
+export default {
+  fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    return handle({request, env, ctx})
+  },
+}
 
-async function handle(event: FetchEvent) {
-  const {request} = event
+async function handle(c: FullContext) {
+  const {request, env} = c
 
   try {
-    return await route(event)
-  } catch (exc) {
-    if (exc instanceof HttpError) {
-      console.warn(exc.message)
-      return exc.response()
+    return await route(c)
+  } catch (exc_) {
+    if (exc_ instanceof HttpError) {
+      console.warn(exc_.message)
+      return exc_.response()
     }
-    console.error('error handling request:', request, exc)
-    captureException(event, exc)
-    const body = debug ? `\nError occurred on the edge:\n\n${exc.message}\n${exc.stack}\n` : 'Edge Server Error'
+    const err = exc_ as Error
+    console.error('error handling request:', request, err)
+    c.ctx.waitUntil(captureException(c, err))
+    const body = debug(env) ? `\nError occurred on the edge:\n\n${err.message}\n${err.stack}\n` : 'Edge Server Error'
     return new Response(body, {status: 500})
   }
 }
 
-async function route(event: FetchEvent) {
-  const {request} = event
+async function route(c: FullContext) {
+  const {request} = c
   const url = new URL(request.url)
   const cleaned_path = clean_path(url)
 
@@ -44,7 +49,7 @@ async function route(event: FetchEvent) {
 
     check_method(request, view.allow || 'GET')
 
-    return view.view(request, {url, match, cleaned_path})
+    return view.view(c, {url, match, cleaned_path})
   }
   throw new HttpError(404, `Page not found for "${url.pathname}"`)
 }

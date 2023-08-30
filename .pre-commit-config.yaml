@@ -1,0 +1,30 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.0.1
+  hooks:
+  - id: check-yaml
+  - id: check-toml
+  - id: end-of-file-fixer
+  - id: trailing-whitespace
+  - id: check-added-large-files
+
+- repo: local
+  hooks:
+  - id: lint-js
+    name: Lint JS
+    entry: make lint-js
+    types: [javascript]
+    language: system
+    pass_filenames: false
+  - id: lint-python
+    name: Lint Python
+    entry: make -C cli lint
+    types: [python]
+    language: system
+    pass_filenames: false
+  - id: mypy
+    name: Mypy
+    entry: make -C cli mypy
+    types: [python]
+    language: system
+    pass_filenames: false

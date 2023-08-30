@@ -1,8 +1,9 @@
+import re
 import sys
 
 import httpx
 import pytest
-from pytest_toolbox.comparison import RegexStr
+from dirty_equals import IsStr
 from typer.testing import CliRunner
 
 from smokeshow.main import cli
@@ -13,11 +14,19 @@ runner = CliRunner()
 def test_help():
     result = runner.invoke(cli, ['--help'])
     assert result.exit_code == 0
-    assert result.stdout == RegexStr(r'.*smokeshow CLI v\d\.[\d.]+, see https://smokeshow\.helpmanual\.io for.*')
+    assert result.stdout == IsStr(
+        regex=r'.*Smokeshow CLI v\d\.[\d.]+, see https://smokeshow\.helpmanual\.io for.*', regex_flags=re.S
+    )
+
+
+def test_version():
+    result = runner.invoke(cli, ['--version'])
+    assert result.exit_code == 0
+    assert result.stdout == IsStr(regex=r'Smokeshow v\d\.[\d.]+\n')
 
 
 def test_generate_key(mocker):
-    mocker.patch('smokeshow.main.KEY_HASH_THRESHOLD', 2 ** 237)
+    mocker.patch('smokeshow.main.KEY_HASH_THRESHOLD', 2**237)
 
     result = runner.invoke(cli, ['generate-key'])
     assert result.exit_code == 0

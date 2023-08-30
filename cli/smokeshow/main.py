@@ -17,15 +17,28 @@ __all__ = 'cli', 'upload'
 
 USER_AGENT = f'smokeshow-cli-v{VERSION}'
 KEY_HASH_THRESHOLD_POW = 234
-KEY_HASH_THRESHOLD = 2 ** KEY_HASH_THRESHOLD_POW
+KEY_HASH_THRESHOLD = 2**KEY_HASH_THRESHOLD_POW
 ROOT_URL = 'https://smokeshow.helpmanual.io'
 DEFAULT_TIMEOUT = 30  # seconds
 UPLOAD_FILE_TIMEOUT = 300  # seconds
 REQUEST_RETRIES = 3
 
 cli = Typer(
-    name='smokeshow', help=f'smokeshow CLI v{VERSION}, see https://smokeshow.helpmanual.io for more information.'
+    name='smokeshow', help=f'Smokeshow CLI v{VERSION}, see https://smokeshow.helpmanual.io for more information.'
 )
+
+
+def version_callback(value: bool) -> None:
+    if value:
+        print(f'Smokeshow v{VERSION}')
+        raise Exit()
+
+
+@cli.callback()
+def _cli_callback(
+    _version: bool = Option(None, '--version', callback=version_callback, is_eager=True),
+) -> None:
+    pass
 
 
 @cli.command(help='Generate a new upload key')
@@ -84,6 +97,9 @@ async def upload(
         auth_key_use = generate_key()
     else:
         auth_key_use = auth_key
+
+    if not root_path.exists():
+        raise ValueError(f'root path "{root_path}" does not exist')
 
     transport = AsyncHTTPTransport(retries=REQUEST_RETRIES)
     async with AsyncClient(timeout=DEFAULT_TIMEOUT, transport=transport) as client:
@@ -187,7 +203,7 @@ def get_content_type(url: str) -> Optional[str]:
 
 
 KB = 1024
-MB = KB ** 2
+MB = KB**2
 
 
 def fmt_size(num: int) -> str:

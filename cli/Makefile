@@ -1,24 +1,15 @@
 .DEFAULT_GOAL := all
-isort = isort smokeshow tests
-black = black -S -l 120 --target-version py37 smokeshow tests
-
-.PHONY: install
-install:
-	python3 -m pip install -U setuptools pip wheel
-	pip install -U -r ../tests/requirements-linting.txt
-	pip install -U -r ../tests/requirements-testing.txt
-	pip install -e .
+sources = smokeshow tests
 
 .PHONY: format
 format:
-	$(isort)
-	$(black)
+	ruff --fix-only $(sources)
+	black $(sources)
 
 .PHONY: lint
 lint:
-	flake8 smokeshow/ tests/
-	$(isort) --check-only --df
-	$(black) --check --diff
+	ruff $(sources)
+	black $(sources) --check --diff
 
 .PHONY: mypy
 mypy:
@@ -27,7 +18,7 @@ mypy:
 
 .PHONY: test
 test:
-	pytest --cov=smokeshow
+	coverage run -m pytest
 
 .PHONY: test-live
 test-live:
@@ -43,7 +34,6 @@ all: lint mypy testcov
 
 .PHONY: clean
 clean:
-	python setup.py clean
 	rm -rf `find . -name __pycache__`
 	rm -f `find . -type f -name '*.py[co]' `
 	rm -f `find . -type f -name '*~' `

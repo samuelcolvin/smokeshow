@@ -7,3 +7,6 @@ node_modules/
 .coverage
 *.py[cod]
 /env/
+/env*/
+/.wrangler/
+/scratch/
