@@ -6,7 +6,7 @@ import re
 import sys
 from mimetypes import guess_type
 from pathlib import Path
-from typing import List, Optional, Tuple, Union, cast, Awaitable
+from typing import List, Optional, Tuple, Union, cast
 
 from httpx import AsyncClient, AsyncHTTPTransport, HTTPError
 from typer import Argument, Exit, Option, Typer
