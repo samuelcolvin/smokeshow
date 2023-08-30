@@ -1,5 +1,3 @@
-from __future__ import annotations as _annotations
-
 import asyncio
 import base64
 import hashlib
@@ -8,7 +6,7 @@ import re
 import sys
 from mimetypes import guess_type
 from pathlib import Path
-from typing import cast
+from typing import List, Optional, Tuple, Union, cast
 
 from httpx import AsyncClient, AsyncHTTPTransport, HTTPError
 from typer import Argument, Exit, Option, Typer
@@ -66,10 +64,10 @@ def generate_key() -> str:
 @cli.command(name='upload', help='Upload one or more files to create a new site')
 def cli_upload(
     path: Path = Argument(..., exists=True, dir_okay=True, file_okay=True, readable=True, resolve_path=True),
-    auth_key: str | None = Option(None, envvar='SMOKESHOW_AUTH_KEY'),
+    auth_key: Optional[str] = Option(None, envvar='SMOKESHOW_AUTH_KEY'),
     root_url: str = Option(ROOT_URL, envvar='SMOKESHOW_ROOT_URL'),
-    github_status_description: str | None = Option(None, envvar='SMOKESHOW_GITHUB_STATUS_DESCRIPTION'),
-    github_coverage_threshold: float | None = Option(None, envvar='SMOKESHOW_GITHUB_COVERAGE_THRESHOLD'),
+    github_status_description: Optional[str] = Option(None, envvar='SMOKESHOW_GITHUB_STATUS_DESCRIPTION'),
+    github_coverage_threshold: Optional[float] = Option(None, envvar='SMOKESHOW_GITHUB_COVERAGE_THRESHOLD'),
 ) -> None:
     try:
         asyncio.run(
@@ -89,9 +87,9 @@ def cli_upload(
 async def upload(
     root_path: Path,
     *,
-    auth_key: str | None = None,
-    github_status_description: str | None = None,
-    github_coverage_threshold: float | None = None,
+    auth_key: Optional[str] = None,
+    github_status_description: Optional[str] = None,
+    github_coverage_threshold: Optional[float] = None,
     root_url: str = ROOT_URL,
 ) -> str:
     if auth_key is None:
@@ -154,7 +152,7 @@ async def upload(
     return upload_root
 
 
-async def _handle_tasks(tasks: list[asyncio.Task[int]]) -> None:
+async def _handle_tasks(tasks: List[asyncio.Task[int]]) -> None:
     """cancel all tasks and ignore all exceptions along the way"""
     for task in tasks:
         task.cancel()
@@ -167,7 +165,7 @@ async def _handle_tasks(tasks: list[asyncio.Task[int]]) -> None:
 
 
 async def _upload_file(
-    client: AsyncClient, secret_key: str, upload_root: str, file_path: Path, rel_path: Path | str
+    client: AsyncClient, secret_key: str, upload_root: str, file_path: Path, rel_path: Union[Path, str]
 ) -> int:
     """
     Raises:
@@ -197,7 +195,7 @@ async def _upload_file(
         raise ValueError(f'invalid response from "{url_path}" status={r2.status_code} response={r2.text}')
 
 
-def get_content_type(url: str) -> str | None:
+def get_content_type(url: str) -> Optional[str]:
     if re.search(r'\.(js|css)\.map$', url):
         return 'application/json'
     else:
@@ -220,7 +218,7 @@ def fmt_size(num: int) -> str:
 GITHUB_API_ROOT = 'https://api.github.com'
 
 
-def get_github_status_info(path: Path, description: str, coverage_threshold: float | None) -> tuple[str, str]:
+def get_github_status_info(path: Path, description: str, coverage_threshold: Optional[float]) -> Tuple[str, str]:
     state = 'success'
     if '{coverage-percentage}' not in description.lower() and coverage_threshold is None:
         return state, description
