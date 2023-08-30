@@ -89,14 +89,16 @@ async function get_file(public_key: string, path: string, env: Env): Promise<Res
     const index_options = get_index_options(path)
     while (!v.value) {
       const next = index_options.next();
-      if (!next.done) {
+      if (next.done) {
+        break
+      } else {
         v = await get_kv_file(public_key, next.value, env)
       }
     }
 
-    // if there's just one file, return that for index
     if (!v.value && path == '/') {
-      const only_file = await get_only(`site:${public_key}:`, env)
+      // if there's just one file, return that for index
+      const only_file = await get_only_file(public_key, env)
       if (only_file) {
         v = await get_kv_file(public_key, only_file, env)
       } else {
@@ -178,16 +180,19 @@ async function site_summary(public_key: string, env: Env): Promise<Record<string
   }
   const obj = raw as Record<string, any>
   const files = await list_all(`site:${public_key}:`, env)
-  obj.files = files.map(k => k.name.substring(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)
+  obj.files = filter_files(files)
   obj.total_site_size = files.map(k => k.metadata.size).reduce((a, v) => a + v, 0)
   return obj
 }
 
-
-export async function get_only(public_key: string, env: Env): Promise<string | undefined> {
-  const prefix = `site:${public_key}:`
-  const value = await env.STORAGE.list({prefix})
-  if (value.keys.length == 1) {
-    return value.keys[0].name.substring(prefix.length)
+export async function get_only_file(public_key: string, env: Env): Promise<string | undefined> {
+  const value = await env.STORAGE.list({prefix: `site:${public_key}:`})
+  const files = filter_files(value.keys)
+  if (files.length == 1) {
+    return files[0]
   }
+}
+
+function filter_files(files: { name: string }[]): string[] {
+  return files.map(k => k.name.substring(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)
 }
