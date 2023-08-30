@@ -88,7 +88,7 @@ async function get_file(public_key: string, path: string, env: Env): Promise<Res
   if (!v.value && path.endsWith('/')) {
     const index_options = get_index_options(path)
     while (!v.value) {
-      const next = index_options.next();
+      const next = index_options.next()
       if (next.done) {
         break
       } else {
@@ -108,7 +108,6 @@ async function get_file(public_key: string, path: string, env: Env): Promise<Res
         })
       }
     }
-
   }
   let status = 200
 
@@ -193,6 +192,6 @@ export async function get_only_file(public_key: string, env: Env): Promise<strin
   }
 }
 
-function filter_files(files: { name: string }[]): string[] {
+function filter_files(files: {name: string}[]): string[] {
   return files.map(k => k.name.substring(PUBLIC_KEY_LENGTH + 6)).filter(f => f != INFO_FILE_NAME)
 }
