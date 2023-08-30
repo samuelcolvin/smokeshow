@@ -20,8 +20,21 @@ KEY_HASH_THRESHOLD_POW = 234
 KEY_HASH_THRESHOLD = 2**KEY_HASH_THRESHOLD_POW
 ROOT_URL = 'https://smokeshow.helpmanual.io'
 cli = Typer(
-    name='smokeshow', help=f'smokeshow CLI v{VERSION}, see https://smokeshow.helpmanual.io for more information.'
+    name='smokeshow', help=f'Smokeshow CLI v{VERSION}, see https://smokeshow.helpmanual.io for more information.'
 )
+
+
+def version_callback(value: bool) -> None:
+    if value:
+        print(f'Smokeshow v{VERSION}')
+        raise Exit()
+
+
+@cli.callback()
+def _cli_callback(
+    _version: bool = Option(None, '--version', callback=version_callback, is_eager=True),
+) -> None:
+    pass
 
 
 @cli.command(help='Generate a new upload key')

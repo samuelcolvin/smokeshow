@@ -18,6 +18,12 @@ def test_help():
     )
 
 
+def test_version():
+    result = runner.invoke(cli, ['--version'])
+    assert result.exit_code == 0
+    assert result.stdout == IsStr(regex=r'Smokeshow v\d\.[\d.]+\n')
+
+
 def test_generate_key(mocker):
     mocker.patch('smokeshow.main.KEY_HASH_THRESHOLD', 2**237)
 
