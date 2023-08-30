@@ -9,18 +9,21 @@ import index_html from './index/index.html'
 
 export const site_path_regex = new RegExp(`^\\/([a-z0-9]{${PUBLIC_KEY_LENGTH}})(\\/.*)`)
 
-const index_html_final = index_html
-  .replace('{readme}', readme)
-  .replace('{github_svg}', github_svg)
-  .replace('{moon_svg}', moon_svg)
-
 const fonts_root = 'https://raw.githubusercontent.com/rsms/inter/v3.15'
 const this_repo_root = 'https://raw.githubusercontent.com/samuelcolvin/smokeshow/master'
 
 export const views: View[] = [
   {
     match: '/',
-    view: async () => simple_response(index_html_final, 'text/html', 3600),
+    view: async ({env}) => {
+      const index_html_content = index_html
+        .replace('{readme}', readme)
+        .replace('{github_svg}', github_svg)
+        .replace('{moon_svg}', moon_svg)
+        .replace('{github_sha}', env.GITHUB_SHA || 'unknown')
+        .replace('{debug}', env.DEBUG)
+      return simple_response(index_html_content, 'text/html', 3600)
+    },
   },
   {
     match: '/favicon.ico',

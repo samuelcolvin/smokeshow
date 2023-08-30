@@ -1,4 +1,4 @@
-import {FullContext} from './utils'
+import {FullContext, debug} from './utils'
 
 interface Extra {
   level?: string
@@ -48,7 +48,7 @@ interface Frame {
 interface SentryData {
   platform: string
   logger: string
-  environment: string
+  environment: 'dev' | 'production'
   fingerprint: string[]
   user: {ip_address: string}
   request: {url: string; method: string; headers: Record<string, string>}
@@ -67,7 +67,7 @@ async function _capture(context: FullContext, data: Partial<SentryData>): Promis
     {
       platform: 'javascript',
       logger: 'cloudflare',
-      environment: context.env.ENVIRONMENT,
+      environment: debug(context.env) ? 'dev' : 'production',
       fingerprint: [data.message || 'null'],
       user: {
         ip_address: request.headers.get('CF-Connecting-IP'),

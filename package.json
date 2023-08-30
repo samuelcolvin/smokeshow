@@ -46,6 +46,7 @@
     "eslint-config-typescript": "^3.0.0",
     "highlight.js": "^10.6.0",
     "marked": "^7.0.5",
+    "marked-gfm-heading-id": "^3.0.6",
     "marked-highlight": "^2.0.4",
     "prettier": "^3.0.3",
     "sass": "^1.32.8",

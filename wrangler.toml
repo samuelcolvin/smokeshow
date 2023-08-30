@@ -13,7 +13,6 @@ watch_dir = "src"
 
 [vars]
 DEBUG = "TRUE"
-ENVIRONMENT = "dev"
 POSTGREST_ROOT = "https://xppeeplrlsmwbufrpfvu.supabase.co"
 POSTGREST_APIKEY = "-"
 
@@ -27,4 +26,3 @@ kv_namespaces = [
 ]
 [env.production.vars]
 DEBUG = "FALSE"
-ENVIRONMENT = "production"

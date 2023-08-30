@@ -116,9 +116,22 @@ jobs:
           SMOKESHOW_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SMOKESHOW_GITHUB_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
 
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [server-lint]
+    environment: cloudflare-staging-deploy
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: publish --var GITHUB_SHA:${{ github.sha }} --var POSTGREST_APIKEY:${{ secrets.POSTGREST_APIKEY }}
+
   check:  # Used for branch protection
     if: always()
-    needs: [server-lint, cli-lint, cli-test, cli-coverage-check]
+    needs: [server-lint, cli-lint, cli-test, cli-coverage-check, deploy-staging]
     runs-on: ubuntu-latest
 
     steps:
