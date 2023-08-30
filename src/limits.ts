@@ -1,17 +1,15 @@
-import {HttpError} from './utils'
+import {HttpError, Env} from './utils'
 import {SITES_PER_DAY, MAX_SITE_SIZE} from './constants'
-
-declare const postgrest_root: string
-declare const postgrest_apikey: string
 
 export async function create_site_check(
   public_key: string,
   auth_key: string,
   user_agent: string,
   ip_address: string,
+  env: Env,
 ): Promise<number> {
   const data = {public_key, auth_key, max_sites: SITES_PER_DAY, user_agent, ip_address}
-  const recent_sites = await postgrest_post('check_new_site', data)
+  const recent_sites = await postgrest_post('check_new_site', data, env)
 
   if (recent_sites == null) {
     // too many site created in the last 24 hours
@@ -20,9 +18,9 @@ export async function create_site_check(
   return recent_sites as number
 }
 
-export async function new_file_check(public_key: string, file_size: number): Promise<number> {
+export async function new_file_check(public_key: string, file_size: number, env: Env): Promise<number> {
   const data = {public_key, file_size, size_limit: MAX_SITE_SIZE}
-  const total_size = await postgrest_post('check_new_file', data)
+  const total_size = await postgrest_post('check_new_file', data, env)
 
   if (total_size == null) {
     throw new HttpError(429, `You've exceeded the site size limit of ${MAX_SITE_SIZE}.`)
@@ -32,11 +30,11 @@ export async function new_file_check(public_key: string, file_size: number): Pro
 
 const allowed_responses = new Set([200, 201])
 
-async function postgrest_post(function_name: string, data: Record<string, any>): Promise<any> {
-  const request_url = `${postgrest_root}/rest/v1/rpc/${function_name}`
+async function postgrest_post(function_name: string, data: Record<string, any>, env: Env): Promise<any> {
+  const request_url = `${env.POSTGREST_ROOT}/rest/v1/rpc/${function_name}`
   const r = await fetch(request_url, {
     method: 'POST',
-    headers: {apikey: postgrest_apikey, 'content-type': 'application/json'},
+    headers: {apikey: env.POSTGREST_APIKEY, 'content-type': 'application/json'},
     body: JSON.stringify(data),
   })
   const response_text = await r.text()

@@ -16,8 +16,6 @@ import {
 import {check_create_auth, check_upload_auth, create_random_string, sign_auth, array_to_base64} from './auth'
 import {create_site_check, new_file_check} from './limits'
 
-declare const STORAGE: KVNamespace
-
 export async function create_site({request, env}: FullContext, info: RequestExtraInfo): Promise<Response> {
   const auth_key = await check_create_auth(request)
   const public_key = create_random_string(PUBLIC_KEY_LENGTH)
@@ -28,11 +26,11 @@ export async function create_site({request, env}: FullContext, info: RequestExtr
   }
   const ip_address = request.headers.get('cf-connecting-ip') as string
 
-  if (await STORAGE.get(`site:${public_key}:${INFO_FILE_NAME}`)) {
+  if (await env.STORAGE.get(`site:${public_key}:${INFO_FILE_NAME}`)) {
     // shouldn't happen
     throw new HttpError(409, 'Site with this public key already exists')
   }
-  const sites_created_24h = await create_site_check(public_key, auth_key, user_agent, ip_address)
+  const sites_created_24h = await create_site_check(public_key, auth_key, user_agent, ip_address, env)
   console.log(`creating new site public_key=${public_key} sites_created_24h=${sites_created_24h} auth_key=${auth_key}`)
 
   const creation = new Date()
@@ -49,7 +47,7 @@ export async function create_site({request, env}: FullContext, info: RequestExtr
     site_expiration: site_expiration_date.toISOString(),
   }
   const info_json = JSON.stringify(site_info, null, 2)
-  await STORAGE.put(`site:${public_key}:${INFO_FILE_NAME}`, info_json, {
+  await env.STORAGE.put(`site:${public_key}:${INFO_FILE_NAME}`, info_json, {
     expiration: Math.round(site_expiration_date.getTime() / 1000),
     metadata: {content_type: 'application/json', size: info_json.length},
   })
@@ -85,13 +83,13 @@ async function get_file(public_key: string, path: string, env: Env): Promise<Res
     return json_response(await site_summary(public_key, env))
   }
 
-  let v = await get_kv_file(public_key, path)
+  let v = await get_kv_file(public_key, path, env)
 
   if (!v.value && path.endsWith('/')) {
     const index_options = get_index_options(path)
     let next
     while (!v.value && !(next = index_options.next()).done) {
-      v = await get_kv_file(public_key, next.value as string)
+      v = await get_kv_file(public_key, next.value as string, env)
     }
 
     if (!v.value && path == '/') {
@@ -106,9 +104,9 @@ async function get_file(public_key: string, path: string, env: Env): Promise<Res
   if (!v.value) {
     // check if we have a 404.html or 404.txt file, if so use that and change the status, else throw a generic 404
     status = 404
-    v = await get_kv_file(public_key, '/404.html')
+    v = await get_kv_file(public_key, '/404.html', env)
     if (!v.value) {
-      v = await get_kv_file(public_key, '/404.txt')
+      v = await get_kv_file(public_key, '/404.txt', env)
     }
     if (!v.value) {
       throw new HttpError(404, `File "${path}" not found in site "${public_key}"`)
@@ -118,14 +116,14 @@ async function get_file(public_key: string, path: string, env: Env): Promise<Res
   return response_from_kv(v, null, status)
 }
 
-async function get_kv_file(public_key: string, path: string): Promise<KVFile> {
-  const v = await STORAGE.getWithMetadata(`site:${public_key}:${path}`, 'stream')
+async function get_kv_file(public_key: string, path: string, env: Env): Promise<KVFile> {
+  const v = await env.STORAGE.getWithMetadata(`site:${public_key}:${path}`, 'stream')
   console.log(`site:${public_key}:${path} -> ${JSON.stringify(v.metadata)}`)
   const metadata = (v.metadata as FileMetadata) || {}
   if (metadata.hash) {
     // we know this is the new storage mode and the actual file is saved under another key
     return {
-      value: await STORAGE.get(`file:${metadata.hash}`, 'stream'),
+      value: await env.STORAGE.get(`file:${metadata.hash}`, 'stream'),
       metadata,
     }
   }
@@ -138,7 +136,7 @@ async function post_file(c: FullContext, public_key: string, path: string): Prom
   if (path == INFO_FILE_NAME) {
     throw new HttpError(403, `Overwriting "${INFO_FILE_NAME}" is forbidden`)
   }
-  const {request} = c
+  const {request, env} = c
 
   const content_type = request.headers.get('content-type')
   const extra_headers = [...request.headers.entries()]
@@ -147,7 +145,7 @@ async function post_file(c: FullContext, public_key: string, path: string): Prom
   const blob = await request.blob()
   const size = blob.size
 
-  const total_site_size = await new_file_check(public_key, size)
+  const total_site_size = await new_file_check(public_key, size, env)
 
   const data_array = await blob.arrayBuffer()
   const hash_array = await crypto.subtle.digest('sha-256', data_array)
@@ -157,15 +155,15 @@ async function post_file(c: FullContext, public_key: string, path: string): Prom
   const metadata = {size, content_type, hash, extra_headers}
 
   await Promise.all([
-    STORAGE.put(`site:${public_key}:${path}`, '1', {expiration, metadata}),
-    STORAGE.put(`file:${hash}`, data_array, {expiration, metadata: {public_key, path}}),
+    env.STORAGE.put(`site:${public_key}:${path}`, '1', {expiration, metadata}),
+    env.STORAGE.put(`file:${hash}`, data_array, {expiration, metadata: {public_key, path}}),
   ])
 
   return json_response({path, content_type, size, total_site_size})
 }
 
 async function site_summary(public_key: string, env: Env): Promise<Record<string, any>> {
-  const raw = await STORAGE.get(`site:${public_key}:${INFO_FILE_NAME}`, 'json')
+  const raw = await env.STORAGE.get(`site:${public_key}:${INFO_FILE_NAME}`, 'json')
   if (!raw) {
     throw new HttpError(404, `Site "${public_key}" not found`)
   }

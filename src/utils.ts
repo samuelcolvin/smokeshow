@@ -5,8 +5,9 @@ export interface Env {
   STORAGE: KVNamespace
   ENVIRONMENT: 'dev' | 'production'
   SENTRY_DSN?: string
+  POSTGREST_ROOT: string
+  POSTGREST_APIKEY: string
 }
-
 export interface FullContext {
   request: Request
   env: Env
