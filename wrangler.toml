@@ -13,16 +13,15 @@ watch_dir = "src"
 
 [vars]
 DEBUG = "TRUE"
-POSTGREST_ROOT = "https://xppeeplrlsmwbufrpfvu.supabase.co"
-POSTGREST_APIKEY = "-"
+# POSTGREST_ROOT and POSTGREST_APIKEY are set by CI
 
 [env.production]
 name = "smokeshow"
 workers_dev = false
 route = "smokeshow.helpmanual.io/*"
-zone_id = "653b9d1efbeea2a2602b73ac5ea8d388"  # helpmanual.io
 kv_namespaces = [
   {binding = "STORAGE", id = "74015bfa1d2443dfaaba49276b0d4310"}
 ]
 [env.production.vars]
 DEBUG = "FALSE"
+# POSTGREST_ROOT and POSTGREST_APIKEY are set by CI
