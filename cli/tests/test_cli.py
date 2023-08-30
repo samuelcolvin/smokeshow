@@ -14,7 +14,7 @@ def test_help():
     result = runner.invoke(cli, ['--help'])
     assert result.exit_code == 0
     assert result.stdout == IsStr(
-        regex=r'.*smokeshow CLI v\d\.[\d.]+, see https://smokeshow\.helpmanual\.io for.*', regex_flags=re.S
+        regex=r'.*Smokeshow CLI v\d\.[\d.]+, see https://smokeshow\.helpmanual\.io for.*', regex_flags=re.S
     )
 
 
