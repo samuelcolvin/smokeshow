@@ -7,6 +7,7 @@ export interface Env {
   POSTGREST_ROOT: string
   POSTGREST_APIKEY: string
   GITHUB_SHA?: string
+  GITHUB_REF?: string
 }
 export interface FullContext {
   request: Request

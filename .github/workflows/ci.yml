@@ -127,7 +127,7 @@ jobs:
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: publish --var GITHUB_SHA:${{ github.sha }} --var POSTGREST_APIKEY:${{ secrets.POSTGREST_APIKEY }}
+          command: deploy --var GITHUB_SHA:${{ github.sha }} --var GITHUB_REF:${{ github.ref }} --var POSTGREST_APIKEY:${{ secrets.POSTGREST_APIKEY }}
 
   check:  # Used for branch protection
     if: always()

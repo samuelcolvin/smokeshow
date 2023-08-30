@@ -21,6 +21,7 @@ export const views: View[] = [
         .replace('{github_svg}', github_svg)
         .replace('{moon_svg}', moon_svg)
         .replace('{github_sha}', env.GITHUB_SHA || 'unknown')
+        .replace('{github_ref}', env.GITHUB_REF || 'unknown')
         .replace('{debug}', env.DEBUG)
       return simple_response(index_html_content, 'text/html', 3600)
     },
