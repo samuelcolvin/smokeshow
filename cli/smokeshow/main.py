@@ -152,7 +152,7 @@ async def upload(
     return upload_root
 
 
-async def _handle_tasks(tasks: List[asyncio.Task[int]]) -> None:
+async def _handle_tasks(tasks: 'List[asyncio.Task[int]]') -> None:
     """cancel all tasks and ignore all exceptions along the way"""
     for task in tasks:
         task.cancel()
