@@ -94,9 +94,9 @@ jobs:
           enable-cache: true
 
       - name: get coverage files
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
-          name: coverage
+          merge-multiple: true
           path: cli
 
       - run: uv sync
