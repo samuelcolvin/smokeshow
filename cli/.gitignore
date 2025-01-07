@@ -6,3 +6,4 @@
 .cache/
 .mypy_cache/
 /upload.sh
+.python-version

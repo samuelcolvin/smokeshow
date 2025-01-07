@@ -25,8 +25,8 @@ lint:
 
 .PHONY: typecheck
 typecheck:
-	pyright --version
-	pyright smokeshow
+	uv run pyright --version
+	uv run pyright smokeshow
 
 .PHONY: test
 test:

@@ -8,14 +8,20 @@ on:
       - '**'
   pull_request: {}
 
+env:
+  CI: true
+  COLUMNS: 120
+  UV_PYTHON: 3.12
+  UV_FROZEN: '1'
+
 jobs:
   server-lint:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: '18.x'
 
@@ -27,21 +33,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - uses: astral-sh/setup-uv@v5
         with:
-          python-version: '3.11'
+          enable-cache: true
 
-      - name: install
-        run: |
-          pip install -U pip
-          pip install -r requirements/cli.txt
+      - run: uv sync
+        working-directory: cli
 
-      - run: make lint
-        working-directory: cli
-      - run: make mypy
-        working-directory: cli
+      - uses: pre-commit/action@v3.0.0
+        with:
+          extra_args: --all-files --verbose
 
   cli-test:
     name: cli-test-${{ matrix.os }}-py${{ matrix.python-version }}
@@ -52,36 +55,29 @@ jobs:
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
 
     runs-on: ${{ matrix.os }}-latest
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: set up python
-        uses: actions/setup-python@v4
+      - uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          enable-cache: true
 
-      - name: install
-        run: |
-          pip install -U pip
-          pip install -r requirements/cli.txt
-      - run: pip freeze
+      - run: mkdir coverage
 
-      - name: test
+      - run: make test
         working-directory: cli
-        run: make test
-
-      - name: rename coverage
-        working-directory: cli
-        run: |
-          mkdir coverage
-          mv .coverage coverage/.coverage.${{ matrix.os }}-py${{ matrix.python-version }}
+        env:
+          COVERAGE_FILE: coverage/.coverage.${{ runner.os }}-py${{ matrix.python-version }}
 
       - name: store coverage files
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: coverage
-          path: cli/coverage
+          name: coverage-${{ matrix.python-version }}
+          path: coverage
+          include-hidden-files: true
 
   cli-coverage-check:
     # dogfooding! use smokeshow to view our coverage report
@@ -89,11 +85,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - uses: astral-sh/setup-uv@v5
         with:
-          python-version: '3.11'
+          enable-cache: true
 
       - name: get coverage files
         uses: actions/download-artifact@v2
@@ -101,15 +97,16 @@ jobs:
           name: coverage
           path: cli
 
-      - run: pip install coverage smokeshow
+      - run: uv sync
+        working-directory: cli
 
       - name: build coverage
-        working-directory: cli
         run: |
-          coverage combine
-          coverage html -i
+          uv run coverage combine
+          uv run coverage html -i
 
-      - run: smokeshow upload cli/htmlcov
+      - run: uv run smokeshow upload htmlcov
+        working-directory: cli
         env:
           SMOKESHOW_GITHUB_STATUS_DESCRIPTION: CLI Coverage {coverage-percentage}
           SMOKESHOW_GITHUB_COVERAGE_THRESHOLD: 90
@@ -122,7 +119,7 @@ jobs:
     environment: cloudflare-staging-deploy
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: cloudflare/wrangler-action@v3
         with:
@@ -153,7 +150,7 @@ jobs:
     environment: cloudflare-production-deploy
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: cloudflare/wrangler-action@v3
         with:
@@ -176,27 +173,21 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: set up python
-        uses: actions/setup-python@v4
+      - uses: astral-sh/setup-uv@v5
         with:
-          python-version: '3.11'
+          enable-cache: true
 
-      - name: install
-        run: pip install -U build
-
-      - name: check version
-        id: check-version
-        uses: samuelcolvin/check-python-version@v4
+      - name: check GITHUB_REF matches package version
+        uses: samuelcolvin/check-python-version@v4.1
         with:
-          version_file_path: 'cli/smokeshow/version.py'
+          version_file_path: 'cli/pyproject.toml'
 
-      - name: build
-        working-directory: cli
-        run: python -m build
+      - run: uv build
 
-      - name: Upload package to PyPI
+      - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          skip-existing: true
           packages-dir: cli/dist/

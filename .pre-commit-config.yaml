@@ -22,9 +22,9 @@ repos:
     types: [python]
     language: system
     pass_filenames: false
-  - id: mypy
-    name: Mypy
-    entry: make -C cli mypy
+  - id: typecheck
+    name: Typecheck Python
+    entry: make -C cli typecheck
     types: [python]
     language: system
     pass_filenames: false
