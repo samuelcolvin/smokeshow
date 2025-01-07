@@ -69,10 +69,10 @@ jobs:
 
       - run: mkdir coverage
 
-      - run: make test
+      - run: uv run coverage run -m pytest
         working-directory: cli
         env:
-          COVERAGE_FILE: coverage/.coverage.${{ runner.os }}-py${{ matrix.python-version }}
+          COVERAGE_FILE: ../coverage/.coverage.${{ runner.os }}-py${{ matrix.python-version }}
 
       - name: store coverage files
         uses: actions/upload-artifact@v4
@@ -104,7 +104,7 @@ jobs:
 
       - name: build coverage
         run: |
-          uv run coverage combine
+          uv run coverage combine coverage
           uv run coverage html -i
         working-directory: cli
 
