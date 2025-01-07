@@ -188,6 +188,7 @@ jobs:
           version_file_path: 'cli/pyproject.toml'
 
       - run: uv build
+        working-directory: cli
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
