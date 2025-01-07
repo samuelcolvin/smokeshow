@@ -216,6 +216,12 @@ def fmt_size(num: int) -> str:
 
 
 GITHUB_API_ROOT = 'https://api.github.com'
+COVERAGE_REGEXES = (
+    # for coverage
+    re.compile(r'<span\s+class="pc_cov">\s*([\d.]+)%\s*</span>'),
+    # for diff-cover
+    re.compile(r'<li><b>Coverage</b>: *([\d.]+)%</li>'),
+)
 
 
 def get_github_status_info(path: Path, description: str, coverage_threshold: Optional[float]) -> tuple[str, str]:
@@ -226,14 +232,16 @@ def get_github_status_info(path: Path, description: str, coverage_threshold: Opt
     cov_sub = '{COVERAGE NOT FOUND}'
     index_path = path / 'index.html'
     if index_path.is_file():
-        m = re.search(r'<span\s+class="pc_cov">\s*([\d.]+)%\s*</span>', index_path.read_text())
-        if m:
-            coverage = float(m.group(1))
-            if coverage_threshold is not None and coverage < coverage_threshold:
-                state = 'failure'
-                cov_sub = f'{coverage:0.2f}% < {coverage_threshold:0.2f}%'
-            else:
-                cov_sub = f'{coverage:0.2f}%'
+        for regex in COVERAGE_REGEXES:
+            m = regex.search(index_path.read_text())
+            if m:
+                coverage = float(m.group(1))
+                if coverage_threshold is not None and coverage < coverage_threshold:
+                    state = 'failure'
+                    cov_sub = f'{coverage:0.2f}% < {coverage_threshold:0.2f}%'
+                else:
+                    cov_sub = f'{coverage:0.2f}%'
+                break
 
     description = re.sub('{coverage-percentage}', cov_sub, description, flags=re.I)
     return state, description
