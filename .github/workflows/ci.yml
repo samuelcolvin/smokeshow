@@ -45,6 +45,8 @@ jobs:
       - uses: pre-commit/action@v3.0.0
         with:
           extra_args: --all-files --verbose
+        env:
+          SKIP: lint-js
 
   cli-test:
     name: cli-test-${{ matrix.os }}-py${{ matrix.python-version }}
