@@ -11,11 +11,11 @@ from typing import List, Optional, Tuple, Union, cast
 from httpx import AsyncClient, AsyncHTTPTransport, HTTPError
 from typer import Argument, Exit, Option, Typer
 
-from .version import VERSION
+from .version import __version__
 
 __all__ = 'cli', 'upload'
 
-USER_AGENT = f'smokeshow-cli-v{VERSION}'
+USER_AGENT = f'smokeshow-cli-v{__version__}'
 KEY_HASH_THRESHOLD_POW = 234
 KEY_HASH_THRESHOLD = 2**KEY_HASH_THRESHOLD_POW
 ROOT_URL = 'https://smokeshow.helpmanual.io'
@@ -24,13 +24,13 @@ UPLOAD_FILE_TIMEOUT = 300  # seconds
 REQUEST_RETRIES = 3
 
 cli = Typer(
-    name='smokeshow', help=f'Smokeshow CLI v{VERSION}, see https://smokeshow.helpmanual.io for more information.'
+    name='smokeshow', help=f'Smokeshow CLI v{__version__}, see https://smokeshow.helpmanual.io for more information.'
 )
 
 
 def version_callback(value: bool) -> None:
     if value:
-        print(f'Smokeshow v{VERSION}')
+        print(f'Smokeshow v{__version__}')
         raise Exit()
 
 

@@ -1,8 +1,6 @@
-/env/
-/env37/
+/.venv/
 /build/
 /htmlcov/
-*.lock
 *.py[cod]
 *.egg-info/
 .cache/

@@ -9,6 +9,7 @@ path = "smokeshow/version.py"
 name = "smokeshow"
 description = "Deploy ephemeral websites."
 authors = [{name = "Samuel Colvin", email = "s@muelcolvin.com"}]
+version = "0.5.0"
 license = "MIT"
 readme = "README.md"
 classifiers = [
@@ -39,7 +40,6 @@ dependencies = [
     "httpx>=0.24",
     "typer>=0.8.0",
 ]
-dynamic = ["version"]
 
 [project.urls]
 Homepage = "https://smokeshow.helpmanual.io"
@@ -51,13 +51,40 @@ Changelog = "https://github.com/samuelcolvin/smokeshow/releases"
 [project.scripts]
 smokeshow = "smokeshow.main:cli"
 
+[dependency-groups]
+dev = [
+    "aiohttp>=3.10.11",
+    "coverage>=7.6.1",
+    "dirty-equals>=0.8.0",
+    "pyright>=1.1.391",
+    "pytest>=8.3.4",
+    "pytest-mock>=3.14.0",
+    "pytest-pretty>=1.2.0",
+    "ruff>=0.8.6",
+]
+
 [tool.ruff]
 line-length = 120
-extend-select = ["Q", "RUF100", "C90", "UP", "I"]
-flake8-quotes = {inline-quotes = "single", multiline-quotes = "double"}
-mccabe = { max-complexity = 14 }
-isort = { known-first-party = ["tests"] }
-target-version = "py38"
+target-version = "py39"
+
+[tool.ruff.lint]
+extend-select = [
+    "Q",
+    "RUF100",
+    "C90",
+    "UP",
+    "I",
+]
+flake8-quotes = { inline-quotes = "single", multiline-quotes = "double" }
+isort = { combine-as-imports = true, known-first-party = ["pydantic_ai"] }
+mccabe = { max-complexity = 15 }
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "single"
+
 
 [tool.pytest.ini_options]
 testpaths = "tests"
