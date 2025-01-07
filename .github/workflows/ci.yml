@@ -108,7 +108,7 @@ jobs:
           uv run coverage html -i
         working-directory: cli
 
-      - run: uv run smokeshow upload htmlcov
+      - run: uv run -m smokeshow upload htmlcov
         working-directory: cli
         env:
           SMOKESHOW_GITHUB_STATUS_DESCRIPTION: CLI Coverage {coverage-percentage}
