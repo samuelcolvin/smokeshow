@@ -1,50 +1,45 @@
 .DEFAULT_GOAL := all
 sources = smokeshow tests
 
+.PHONY: .uv
+.uv:
+	@uv --version || echo 'Please install uv: https://docs.astral.sh/uv/getting-started/installation/'
+
+.PHONY: .pre-commit
+.pre-commit:
+	@pre-commit -V || echo 'Please install pre-commit: https://pre-commit.com/'
+
+.PHONY: install
+install: .uv .pre-commit
+	uv sync --frozen
+
 .PHONY: format
 format:
-	ruff --fix-only $(sources)
-	black $(sources)
+	uv run ruff format
+	uv run ruff check --fix --fix-only
 
 .PHONY: lint
 lint:
-	ruff $(sources)
-	black $(sources) --check --diff
+	uv run ruff format --check
+	uv run ruff check
 
-.PHONY: mypy
-mypy:
-	mypy --version
-	mypy smokeshow
+.PHONY: typecheck
+typecheck:
+	uv run pyright --version
+	uv run pyright smokeshow
 
 .PHONY: test
 test:
-	coverage run -m pytest
+	uv run coverage run -m pytest
 
 .PHONY: test-live
 test-live:
-	pytest tests/test_live.py --cf-auth-client --cf-wrangler-dir ..
+	uv run pytest tests/test_live.py --cf-auth-client --cf-wrangler-dir ..
 
 .PHONY: testcov
 testcov: test
 	@echo "building coverage html"
-	@coverage html
+	@uv run coverage html
 
 .PHONY: all
-all: lint mypy testcov
-
-.PHONY: clean
-clean:
-	rm -rf `find . -name __pycache__`
-	rm -f `find . -type f -name '*.py[co]' `
-	rm -f `find . -type f -name '*~' `
-	rm -f `find . -type f -name '.*~' `
-	rm -rf .cache
-	rm -rf .pytest_cache
-	rm -rf .mypy_cache
-	rm -rf htmlcov
-	rm -rf *.egg-info
-	rm -f .coverage
-	rm -f .coverage.*
-	rm -rf build
-	rm -rf dist
-	rm -rf site
+all: lint typecheck testcov

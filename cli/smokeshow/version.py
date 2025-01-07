@@ -1,3 +1,3 @@
-__all__ = ('VERSION',)
+from importlib.metadata import version as _version
 
-VERSION = '0.4.0'
+__version__ = _version('smokeshow')

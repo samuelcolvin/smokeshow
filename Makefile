@@ -2,8 +2,7 @@
 
 .PHONY: install
 install:
-	pip install -U pip pip-tools pre-commit
-	pip install -U -r requirements/cli.txt
+	make -C cli install
 	pre-commit install
 
 .PHONY: format-js

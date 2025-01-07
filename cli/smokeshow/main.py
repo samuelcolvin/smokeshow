@@ -6,16 +6,16 @@ import re
 import sys
 from mimetypes import guess_type
 from pathlib import Path
-from typing import List, Optional, Tuple, Union, cast
+from typing import Optional, Union, cast
 
 from httpx import AsyncClient, AsyncHTTPTransport, HTTPError
 from typer import Argument, Exit, Option, Typer
 
-from .version import VERSION
+from .version import __version__
 
 __all__ = 'cli', 'upload'
 
-USER_AGENT = f'smokeshow-cli-v{VERSION}'
+USER_AGENT = f'smokeshow-cli-v{__version__}'
 KEY_HASH_THRESHOLD_POW = 234
 KEY_HASH_THRESHOLD = 2**KEY_HASH_THRESHOLD_POW
 ROOT_URL = 'https://smokeshow.helpmanual.io'
@@ -24,13 +24,13 @@ UPLOAD_FILE_TIMEOUT = 300  # seconds
 REQUEST_RETRIES = 3
 
 cli = Typer(
-    name='smokeshow', help=f'Smokeshow CLI v{VERSION}, see https://smokeshow.helpmanual.io for more information.'
+    name='smokeshow', help=f'Smokeshow CLI v{__version__}, see https://smokeshow.helpmanual.io for more information.'
 )
 
 
 def version_callback(value: bool) -> None:
     if value:
-        print(f'Smokeshow v{VERSION}')
+        print(f'Smokeshow v{__version__}')
         raise Exit()
 
 
@@ -122,7 +122,7 @@ async def upload(
             upload_root = re.sub('^https?://[^/]+', root_url, upload_root)
 
         if root_path.is_dir():
-            tasks = []
+            tasks: list[asyncio.Task[int]] = []
             for p in root_path.glob('**/*'):
                 if not p.is_file():
                     continue
@@ -152,7 +152,7 @@ async def upload(
     return upload_root
 
 
-async def _handle_tasks(tasks: 'List[asyncio.Task[int]]') -> None:
+async def _handle_tasks(tasks: list[asyncio.Task[int]]) -> None:
     """cancel all tasks and ignore all exceptions along the way"""
     for task in tasks:
         task.cancel()
@@ -218,7 +218,7 @@ def fmt_size(num: int) -> str:
 GITHUB_API_ROOT = 'https://api.github.com'
 
 
-def get_github_status_info(path: Path, description: str, coverage_threshold: Optional[float]) -> Tuple[str, str]:
+def get_github_status_info(path: Path, description: str, coverage_threshold: Optional[float]) -> tuple[str, str]:
     state = 'success'
     if '{coverage-percentage}' not in description.lower() and coverage_threshold is None:
         return state, description
