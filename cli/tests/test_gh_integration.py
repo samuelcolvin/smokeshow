@@ -39,6 +39,12 @@ def test_no_index(tmp_path):
     assert get_github_status_info(tmp_path, 'test {coverage-percentage}', 1) == ('success', 'test {COVERAGE NOT FOUND}')
 
 
+def test_diff_cover(tmp_path):
+    f = tmp_path / 'index.html'
+    f.write_text('<li><b>Coverage</b>: 98%</li>')
+    assert get_github_status_info(tmp_path, 'test {coverage-percentage}', 96) == ('success', 'test 98.00%')
+
+
 def test_root_is_file(tmp_path):
     f = tmp_path / 'foobar.html'
     f.write_text('hello')
